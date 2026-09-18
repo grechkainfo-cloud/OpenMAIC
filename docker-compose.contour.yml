@@ -29,9 +29,23 @@ services:
     #   docker tag openmaic/app:dev openmaic/app:<tag>
     pull_policy: never
     ports:
-      # Bound to loopback: nginx terminates TLS and Kerberos in front of the app
-      # and proxies here. Nothing on the network should reach the app directly.
-      - '127.0.0.1:3000:3000'
+      # Loopback by default: nginx terminates TLS (and, from the Kerberos phase,
+      # SPNEGO) in front of the app and proxies here, so nothing on the network
+      # needs to reach the container directly.
+      #
+      # Before that proxy exists, a stand can be opened to the network for
+      # testing:
+      #
+      #   OPENMAIC_BIND_ADDRESS=0.0.0.0 docker compose -f … up -d
+      #
+      # That publishes the app to everyone who can route to this host, with one
+      # shared username and password in front of it. Fine for a day of checking,
+      # not a way to run. Note also that COOKIE_SECURE=0 is then required in
+      # .env.local: over plain http the browser refuses to store the `Secure`
+      # session cookie, and sign-in loops back to the login screen.
+      #
+      # The left-hand port may change; the container always listens on 3000.
+      - '${OPENMAIC_BIND_ADDRESS:-127.0.0.1}:3000:3000'
     env_file:
       # Addresses and credentials for the contour's services.
       # Start from .env.contour.example — that file documents every value.
