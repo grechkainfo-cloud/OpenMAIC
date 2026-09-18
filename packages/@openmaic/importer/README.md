@@ -251,7 +251,7 @@ const slides = await mod.importPptx(file, { upload });
 
 两道防护已就位：
 
-- **构建期断言**：根 `build` 脚本前置 `node scripts/assert-vendor-maic-importer.mjs`，
+- **构建期断言**：根 `build` 脚本前置 `node scripts/assert-vendored-assets.mjs`，
   若 vendor 产物缺失则**构建直接失败**并给出修复提示，避免把必崩版本部署上线。
 - **运行期守卫**：`use-import-pptx.ts` 在动态 import 前先 `HEAD` 预检该 URL，
   404 时抛出明确错误并提示 `import.error.parserUnavailable`，而不是把 404 HTML

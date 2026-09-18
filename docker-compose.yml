@@ -1,5 +1,11 @@
 services:
   openmaic:
+    # Explicit name and tag. Without one, compose names the image after the
+    # directory it was built in, so what `docker save` produces depends on how
+    # somebody happened to clone the repo — which makes an air-gapped transfer
+    # impossible to verify and a rollback impossible to name. Override the tag
+    # per release: OPENMAIC_IMAGE_TAG=2026.09.18 docker compose build
+    image: openmaic/app:${OPENMAIC_IMAGE_TAG:-dev}
     build:
       context: .
       args:
@@ -40,6 +46,15 @@ services:
       # Optional: mount server-providers.yml for provider config
       # - ./server-providers.yml:/app/server-providers.yml:ro
       - openmaic-data:/app/data
+    # Behind a reverse proxy this is what says whether the upstream is alive.
+    # /api/health is unauthenticated and does no I/O beyond reading the
+    # already-loaded provider config, so it is cheap to poll.
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:3000/api/health >/dev/null || exit 1']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
     restart: unless-stopped
 
   # Optional PostgreSQL backing for the app-embedded persistence API.
@@ -79,6 +94,7 @@ services:
   # replies on app-initiated connections. The export ZIP is self-contained, so
   # the render needs no outbound at all.
   render-service:
+    image: openmaic/render-service:${OPENMAIC_IMAGE_TAG:-dev}
     build: ./render-service
     profiles:
       - video-export

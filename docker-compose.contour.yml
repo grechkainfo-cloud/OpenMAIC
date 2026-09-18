@@ -1,0 +1,109 @@
+# Closed-network deployment.
+#
+# Differs from docker-compose.yml in what it does NOT contain: no `build`, and
+# no PostgreSQL. The image arrives via `docker load` (see docs/deploy-offline.md)
+# and the database, the LLM and MinerU are services that already exist on the
+# corporate network. Everything about reaching them is configuration, not code.
+#
+#   docker compose -f docker-compose.contour.yml up -d
+#
+# Deliberately NOT here: `build:`. If this file could build, sooner or later
+# somebody builds on the contour host, gets a different image than the one that
+# was reviewed and transferred, and nothing records that it happened.
+
+services:
+  openmaic:
+    # The tag that was transferred. `docker load` restores the image under the
+    # name it was saved with, so this must match what docs/deploy-offline.md
+    # produced. There is no build and no registry here: if the tag is absent,
+    # compose fails immediately instead of starting something unintended.
+    image: openmaic/app:${OPENMAIC_IMAGE_TAG:?set OPENMAIC_IMAGE_TAG to the transferred image tag}
+    ports:
+      # Bound to loopback: nginx terminates TLS and Kerberos in front of the app
+      # and proxies here. Nothing on the network should reach the app directly.
+      - '127.0.0.1:3000:3000'
+    env_file:
+      # Addresses and credentials for the contour's services.
+      # Start from .env.contour.example — that file documents every value.
+      - .env.local
+    environment:
+      # Node's trust store does not include the corporate CA, so TLS to an
+      # internal service — the LLM endpoint, MinerU, PostgreSQL with sslmode
+      # above `require` — fails certificate verification. This variable is the
+      # supported way in: it is read by Node itself, so undici (the LLM and
+      # MinerU transports) and node-postgres both honour it.
+      #
+      # It expects a FILE, not a directory. Concatenate the chain if the
+      # internal CA is issued by a root that is also not public.
+      - NODE_EXTRA_CA_CERTS=/app/certs/corporate-ca.crt
+      # Set only when the MP4 render service runs (profile below). Pointing at
+      # an absent service is safe — the capability probe reports export
+      # unavailable and the app degrades to the self-contained ZIP download.
+      - RENDER_SERVICE_URL=http://render-service:9000
+    volumes:
+      # Read-only, and never baked into the image: the CA is site configuration,
+      # and an image that carries one organisation's trust anchors cannot be
+      # reviewed as the same artifact everywhere it runs.
+      - ./certs/corporate-ca.crt:/app/certs/corporate-ca.crt:ro
+      # Provider configuration: base URLs, keys and force-off switches. Keys are
+      # in this file, so it is read-only and lives outside the image.
+      # Start from server-providers.example.yml.
+      - ./server-providers.yml:/app/server-providers.yml:ro
+      # Classroom media and usage records. The image creates /app/data owned by
+      # the runtime user so the first-run copy-up does not land as root.
+      - openmaic-data:/app/data
+    networks:
+      - default # route to the contour's LLM, MinerU and PostgreSQL
+      - render # reach the render service, when it runs
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1:3000/api/health >/dev/null || exit 1']
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  # MP4 export. Opt-in, because the image is heavy (Chromium + FFmpeg) and the
+  # capability is optional — without it the app offers a self-contained ZIP.
+  #
+  #   docker compose -f docker-compose.contour.yml --profile video-export up -d
+  #
+  # The render network is `internal: true` and the container additionally blocks
+  # its own egress from the entrypoint (needs CAP_NET_ADMIN), so the untrusted
+  # Chromium cannot use the shared network to reach back into the app. The
+  # export payload is self-contained; the render needs no outbound at all.
+  render-service:
+    image: openmaic/render-service:${OPENMAIC_IMAGE_TAG:?set OPENMAIC_IMAGE_TAG to the transferred image tag}
+    profiles:
+      - video-export
+    expose:
+      - '9000'
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - PORT=9000
+      - RENDER_RESOURCE_PROFILE=${RENDER_RESOURCE_PROFILE:-standard}
+      - PRODUCER_HEADLESS_SHELL_PATH=/usr/bin/chromium-headless-shell
+      # Ten concurrent users share one render pipeline; queueing is the point.
+      - RENDER_MAX_CONCURRENCY=1
+      - RENDER_MAX_CONCURRENT_EXTRACTIONS=1
+      - PRODUCER_PUPPETEER_PROTOCOL_TIMEOUT_MS=900000
+      - HF_STATIC_DEDUP=false
+      # The app sits behind nginx here. Until the identity layer lands (phase 3)
+      # every caller collapses to one identity, so a per-identity cap would
+      # throttle the whole deployment to a single render.
+      - RENDER_MAX_JOBS_PER_USER=0
+      - RENDER_PREVIEW_MAX_PER_USER=${RENDER_PREVIEW_MAX_PER_USER:-2}
+    mem_limit: ${RENDER_SERVICE_MEMORY_LIMIT:-8g}
+    shm_size: 2gb
+    networks:
+      - render
+    restart: unless-stopped
+
+networks:
+  default: {}
+  render:
+    internal: true
+
+volumes:
+  openmaic-data:

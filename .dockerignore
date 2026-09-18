@@ -20,6 +20,9 @@ dist
 .env*
 !.env.example
 server-providers*.yml
+# Deployment templates: read on the contour host, never needed inside the image.
+docker-compose*.yml
+certs
 
 # misc
 assets

@@ -49,6 +49,9 @@ yarn-error.log*
 # env files
 .env*
 !.env.example
+# Deployment template for the closed network: addresses and comments only,
+# no secrets — it has to be tracked or nobody on the contour side can use it.
+!.env.contour.example
 
 # server provider config (contains API keys)
 server-providers.yml
@@ -78,6 +81,7 @@ next-env.d.ts
 # rebrand runbook nobody can pull is a document that does not exist.
 /docs/*
 !/docs/branding.md
+!/docs/deploy-offline.md
 !/docs/plan/
 # Eval results
 eval/whiteboard-layout/results/

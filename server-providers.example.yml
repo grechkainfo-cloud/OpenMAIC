@@ -1,0 +1,82 @@
+# Server-side provider configuration.
+#
+#   cp server-providers.example.yml server-providers.yml
+#
+# The app reads `server-providers.yml` from its working directory (`/app` in the
+# container; docker-compose.contour.yml mounts it read-only). Values here take
+# precedence over the matching environment variables, and keys never leave the
+# server — only provider ids and metadata reach the browser.
+#
+# Why use this rather than only .env.local: a provider configured here is
+# "managed". The app then ignores any base URL or key the client sends for it,
+# which is what makes a private corporate address work without opening the
+# local-network policy for everything else.
+#
+# The real file holds credentials. It is gitignored, and it must not go into
+# the image — mount it.
+
+providers:
+  # Qwen3 on the contour's OpenAI-compatible endpoint (vLLM).
+  #
+  # apiKey MUST be non-empty. Only `ollama`, `lemonade` and `bedrock` activate
+  # on a base URL alone; every other LLM slot, `qwen` included, is skipped
+  # without a key — and a skipped slot is unmanaged, which is exactly the
+  # opposite of what mounting this file was for. Start vLLM with
+  # `--api-key <token>` and put that token here.
+  qwen:
+    baseUrl: http://vllm.example.corp:8000/v1
+    apiKey: CHANGE-ME
+    models:
+      # Exactly the id GET /v1/models returns, not a marketing name.
+      - qwen3-model-id
+  # If vLLM runs WITHOUT --api-key, use this slot instead of `qwen` and delete
+  # the block above: it is keyless by design. The cost is cosmetic — the picker
+  # shows "Ollama" and a foreign logo, which a Russian-language corporate
+  # deployment will want relabelled in the brand and i18n files.
+  # ollama:
+  #   baseUrl: http://vllm.example.corp:8000/v1
+  #   models:
+  #     - qwen3-model-id
+
+pdf:
+  # Self-hosted MinerU. Managed here, so a client-supplied base URL is ignored
+  # and the SSRF check — which only ever applies to client-supplied URLs —
+  # does not stand between the app and a private address.
+  mineru:
+    baseUrl: http://mineru.example.corp:8080
+    apiKey: ''
+
+# --- Turning things off -------------------------------------------------------
+#
+# `enabled: false` is an operator force-off: it disables a provider for every
+# client regardless of the per-user toggle. It is honoured for tts, asr, image,
+# video and web-search — NOT for the `providers` (LLM) and `pdf` sections, which
+# have no force-off switch. An LLM or PDF provider with no credentials is simply
+# unmanaged; on a closed network its endpoint is unreachable anyway, so the
+# practical effect is the same, but it will still be listed in the UI.
+#
+# Uncomment what the deployment does not have, so it stops being offered:
+
+# tts:
+#   openai:
+#     enabled: false
+#   minimax:
+#     enabled: false
+
+# asr:
+#   openai:
+#     enabled: false
+
+# image:
+#   openai-image:
+#     enabled: false
+#   comfyui-image:
+#     enabled: false
+
+# video:
+#   seedance:
+#     enabled: false
+
+# web-search:
+#   tavily:
+#     enabled: false

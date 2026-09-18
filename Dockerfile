@@ -1,7 +1,22 @@
 # syntax=docker/dockerfile:1
 
+# Base image, pinned to an exact patch release rather than the floating
+# `node:22-alpine`. A build six months from now — the one made to ship a
+# security fix — must differ from this one only by what we changed.
+#
+# For a closed-network deployment pin it harder still, by digest:
+#
+#   docker buildx imagetools inspect node:22.22.2-alpine   # prints the digest
+#   docker build --build-arg NODE_IMAGE=node:22.22.2-alpine@sha256:<digest> .
+#
+# The digest is deliberately NOT hardcoded here: it has to be read from the
+# registry, and a wrong one fails the build in a way that looks like a network
+# problem. render-service/Dockerfile pins its own base by digest and takes its
+# apt indexes from a dated snapshot — do the same here once the digest is known.
+ARG NODE_IMAGE=node:22.22.2-alpine
+
 # ---- Stage 1: Base ----
-FROM node:22-alpine AS base
+FROM ${NODE_IMAGE} AS base
 
 ARG ALPINE_MIRROR=""
 ARG NPM_REGISTRY=""
@@ -74,6 +89,8 @@ ENV NEXT_PUBLIC_ENABLE_VIDEO_EXPORT=$NEXT_PUBLIC_ENABLE_VIDEO_EXPORT
 ENV NEXT_PUBLIC_VIDEO_EXPORT_CTA_DESTINATION=$NEXT_PUBLIC_VIDEO_EXPORT_CTA_DESTINATION
 ENV NEXT_PUBLIC_ENABLE_PPTX_IMPORT=$NEXT_PUBLIC_ENABLE_PPTX_IMPORT
 ENV NEXT_PUBLIC_PRO_WORKBENCH_ENABLED=$NEXT_PUBLIC_PRO_WORKBENCH_ENABLED
+# Same reason as in the runner: no outbound telemetry from the build either.
+ENV NEXT_TELEMETRY_DISABLED=1
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/packages ./packages
@@ -83,7 +100,7 @@ COPY --from=deps /app/public/vendor ./public/vendor
 RUN pnpm build
 
 # ---- Stage 4: Runner ----
-FROM node:22-alpine AS runner
+FROM ${NODE_IMAGE} AS runner
 
 ARG ALPINE_MIRROR=""
 
@@ -92,6 +109,10 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV HOSTNAME=0.0.0.0
 ENV PORT=3000
+# Next.js phones home unless told not to. On a network-isolated deployment the
+# request cannot succeed, so all it produces is a delay on start and an entry in
+# the proxy log that somebody then has to explain.
+ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN if [ -n "$ALPINE_MIRROR" ]; then \
       cp /etc/apk/repositories /tmp/apk.repositories; \
