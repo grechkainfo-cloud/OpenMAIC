@@ -2036,6 +2036,15 @@
     "placeholder": "Access code",
     "error": "Invalid access code. Please try again."
   },
+  "auth": {
+    "title": "Sign in",
+    "username": "Username",
+    "password": "Password",
+    "submit": "Sign in",
+    "error": "Invalid username or password.",
+    "rateLimited": "Too many attempts. Please wait a minute and try again.",
+    "signOut": "Sign out"
+  },
   "workbench": {
     "tool": {
       "label": {

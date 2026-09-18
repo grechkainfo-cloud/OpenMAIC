@@ -26,6 +26,14 @@ export async function register(): Promise<void> {
   const { resolveAssetQuotaBytes } = await import('@/lib/persistence/asset-quota');
   resolveAssetQuotaBytes();
 
+  // Identity configuration, for the same reason and at the same moment: a
+  // deployment that asks for authentication and cannot provide it must fail to
+  // START rather than boot, pass its health check, and then refuse every login.
+  // It also throws on `AUTH_PROVIDER=windows`, which is not implemented yet —
+  // better than a 500 the first time somebody tries to sign in.
+  const { assertAuthConfig } = await import('@/lib/auth/config');
+  assertAuthConfig();
+
   // The pending-allocation window, for the same reason and at the same moment.
   // Too short is worse than malformed: it silently expires allocations whose
   // document write was still coming, so it must fail the process rather than

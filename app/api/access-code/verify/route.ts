@@ -6,6 +6,7 @@ import { createAccessToken } from '@/lib/server/access-token';
 import { accessCodeAttemptLimiter } from '@/lib/server/attempt-limiter';
 import { clientIdentity, isTrustedProxyIdentity } from '@/lib/server/client-identity';
 import { warnIfAccessCodeIsShort } from '@/lib/server/access-code-warning';
+import { isAuthEnabled } from '@/lib/auth/config';
 
 /**
  * Pull the candidate code out of an already-parsed JSON body. Anything that is
@@ -19,7 +20,10 @@ function readCandidateCode(body: unknown): string | null {
 
 export async function POST(request: Request) {
   const accessCode = process.env.ACCESS_CODE;
-  if (!accessCode) {
+  // Same precedence as the status route: while an identity provider runs, the
+  // shared code is not a way in, and minting its cookie would create a second
+  // credential nobody manages.
+  if (!accessCode || isAuthEnabled()) {
     return apiSuccess({ valid: true });
   }
 

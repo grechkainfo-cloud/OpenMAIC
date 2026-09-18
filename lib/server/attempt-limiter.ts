@@ -218,3 +218,13 @@ export class AccessCodeAttemptLimiter {
 
 /** Process-wide limiter used by the access-code verification route. */
 export const accessCodeAttemptLimiter = new AccessCodeAttemptLimiter();
+
+/**
+ * Process-wide limiter used by the sign-in route.
+ *
+ * A separate instance from the access-code one on purpose: they guard different
+ * secrets, and sharing a counter would let a burst against one lock out the
+ * other — or, worse, let a successful access-code entry clear the failure
+ * history a password-guessing run had accumulated.
+ */
+export const loginAttemptLimiter = new AccessCodeAttemptLimiter();

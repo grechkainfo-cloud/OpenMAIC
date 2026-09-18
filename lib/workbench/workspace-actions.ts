@@ -1,15 +1,17 @@
 'use server';
 
 import { cookies } from 'next/headers';
+import { identityFromSessionToken } from '@/lib/auth';
+import { SESSION_COOKIE } from '@/lib/auth/config';
 import { anonymousCookieSecure } from '@/lib/server/agent-runtime/owner';
 import { getAgentSessionStore } from '@/lib/server/agent-runtime/store';
 
 /**
  * The anonymous identity cookie minted by the agent-runtime owner resolution
  * (`lib/server/agent-runtime/owner.ts`). A server action has no `Request` to
- * hand to `resolveRequestOwnerId`, so this module re-reads the same cookie the
- * routes read, and mints with the same UUID-v4 scheme when it is absent or
- * forged (an over-strict guard is fail-safe: visitors merely get a fresh id,
+ * hand to the shared owner resolver, so this module re-reads the same cookies
+ * the routes read — the session first, the anonymous id second — and mints with
+ * the same UUID-v4 scheme when the latter is absent or forged (an over-strict guard is fail-safe: visitors merely get a fresh id,
  * nobody is locked out of their own sessions).
  */
 const ANONYMOUS_COOKIE = 'anonymous_id';
@@ -17,6 +19,13 @@ const UUID_V4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f
 
 async function currentOwnerId(): Promise<string> {
   const cookieStore = await cookies();
+
+  // A signed-in person owns their sessions under their own subject. Falling
+  // through to the anonymous cookie here would let this action delete rows
+  // under a different owner than the route that created them.
+  const identity = identityFromSessionToken(cookieStore.get(SESSION_COOKIE)?.value);
+  if (identity) return identity.subject;
+
   const existing = cookieStore.get(ANONYMOUS_COOKIE)?.value;
   if (existing && UUID_V4.test(existing)) return `anon:${existing}`;
   const minted = crypto.randomUUID();

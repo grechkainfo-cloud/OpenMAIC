@@ -1,4 +1,25 @@
+import { resolveOwnerSubject } from '@/lib/auth';
+
 import { resolveRequestOwnerId } from './owner';
+
+/**
+ * The owner id for this request: the signed-in subject when there is one,
+ * otherwise the anonymous cookie identity.
+ *
+ * Every owner-scoped route goes through here or through
+ * {@link withRequestOwnerId}. Skipping it would partition a signed-in person's
+ * work under a fresh anonymous cookie, and their courses would vanish the next
+ * time they signed in.
+ *
+ * With no identity provider configured `resolveOwnerSubject` answers undefined
+ * and this is exactly the anonymous behaviour that existed before.
+ */
+export async function requestOwnerId(
+  req: Pick<Request, 'headers'>,
+  responseHeaders: Headers,
+): Promise<string> {
+  return resolveRequestOwnerId(req, responseHeaders, await resolveOwnerSubject(req));
+}
 
 /**
  * Resolve the anonymous owner identity and run a handler with its response
@@ -14,7 +35,7 @@ export async function withRequestOwnerId(
   handler: (ownerId: string, responseHeaders: Headers) => Promise<Response>,
 ): Promise<Response> {
   const responseHeaders = new Headers();
-  const ownerId = resolveRequestOwnerId(req, responseHeaders);
+  const ownerId = await requestOwnerId(req, responseHeaders);
   try {
     return await handler(ownerId, responseHeaders);
   } catch (error) {

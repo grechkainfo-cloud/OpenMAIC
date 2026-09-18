@@ -12,7 +12,7 @@ import type { NextRequest } from 'next/server';
 
 import { isAgentRuntimeConfigured } from '@/lib/config/feature-flags';
 import { subscribeAgentEventWakeup } from '@/lib/server/agent-runtime/event-notify-bus';
-import { resolveRequestOwnerId } from '@/lib/server/agent-runtime/owner';
+import { requestOwnerId } from '@/lib/server/agent-runtime/with-owner';
 import { getAgentSessionStore } from '@/lib/server/agent-runtime/store';
 
 export const runtime = 'nodejs';
@@ -41,12 +41,10 @@ export async function GET(req: NextRequest) {
 
   // Identity belongs to the request, not the URL. EventSource reconnects to
   // this same stable path with the anonymous cookie minted on first attach.
-  // This slice resolves only the anonymous cookie identity; a future auth
-  // integration must thread `authenticatedOwnerId` through here, or sessions
-  // created under authenticated identities would be unreachable by their own
-  // owner.
+  // The owner is the signed-in subject when an identity provider is
+  // configured, and the anonymous cookie identity otherwise.
   const responseHeaders = new Headers();
-  const ownerId = resolveRequestOwnerId(req, responseHeaders);
+  const ownerId = await requestOwnerId(req, responseHeaders);
   const store = await getAgentSessionStore();
 
   const url = new URL(req.url);
