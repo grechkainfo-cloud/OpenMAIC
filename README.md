@@ -114,6 +114,17 @@ sha256sum openmaic-*.tar > openmaic-$OPENMAIC_IMAGE_TAG.sha256
 
 На приёмной стороне — сверить суммы **до** загрузки, затем `docker load`.
 
+`OPENMAIC_IMAGE_TAG` при запуске должен совпадать с тегом, под которым образ
+сохранён: `docker load` восстанавливает имя как есть. При несовпадении compose
+скажет, что образа нет, и никуда за ним не полезет — у обоих сервисов стоит
+`pull_policy: never`, иначе Docker ушёл бы в Hub и вернул невразумительное
+`pull access denied` вместо «образа нет». Проверить и переименовать:
+
+```bash
+docker images openmaic/app
+docker tag openmaic/app:dev openmaic/app:2026.09.18
+```
+
 ### Настройка на стенде
 
 ```

@@ -18,6 +18,16 @@ services:
     # produced. There is no build and no registry here: if the tag is absent,
     # compose fails immediately instead of starting something unintended.
     image: openmaic/app:${OPENMAIC_IMAGE_TAG:?set OPENMAIC_IMAGE_TAG to the transferred image tag}
+    # Never reach for a registry. Without this, an image that is absent locally —
+    # a tag that does not match what `docker load` restored, most often — sends
+    # Docker to Docker Hub, where `openmaic/app` is somebody else's namespace or
+    # nothing at all. On a host with no route out that is a timeout; on one with
+    # a route it is worse, because it could succeed. `never` fails immediately
+    # and says the image is missing, which is the actual problem.
+    #
+    #   docker images openmaic/app        # what is really here
+    #   docker tag openmaic/app:dev openmaic/app:<tag>
+    pull_policy: never
     ports:
       # Bound to loopback: nginx terminates TLS and Kerberos in front of the app
       # and proxies here. Nothing on the network should reach the app directly.
@@ -86,6 +96,8 @@ services:
   # export payload is self-contained; the render needs no outbound at all.
   render-service:
     image: openmaic/render-service:${OPENMAIC_IMAGE_TAG:?set OPENMAIC_IMAGE_TAG to the transferred image tag}
+    # Same reason as the app: local images only.
+    pull_policy: never
     profiles:
       - video-export
     expose:

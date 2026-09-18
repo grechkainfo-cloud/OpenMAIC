@@ -97,7 +97,20 @@ sha256sum openmaic-*.tar > openmaic-$OPENMAIC_IMAGE_TAG.sha256
 4. `docker images openmaic/app` — убеждаемся, что тег тот самый.
 
 `docker load` восстанавливает образ под тем именем, с которым он сохранён,
-поэтому `OPENMAIC_IMAGE_TAG` на стенде должен совпадать с тегом сборки.
+поэтому `OPENMAIC_IMAGE_TAG` на стенде должен совпадать с тегом сборки. Если не
+совпадает — `docker compose up` сообщит, что образа нет, и **никуда за ним не
+пойдёт**: в contour-файле у обоих сервисов стоит `pull_policy: never`. Это
+намеренно. Без него отсутствующий локально образ отправляет Docker в Docker Hub,
+где `openmaic/app` — чужое пространство имён, и вместо внятного «образа нет»
+получается `pull access denied`.
+
+Частый случай: собрали без `OPENMAIC_IMAGE_TAG`, получили `openmaic/app:dev`,
+а запускаете с датой. Лечится переименованием:
+
+```bash
+docker images openmaic/app                          # что на самом деле есть
+docker tag openmaic/app:dev openmaic/app:2026.09.18
+```
 
 ---
 
