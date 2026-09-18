@@ -216,6 +216,20 @@ function loadYamlFile(filename: string): YamlData {
     if (!parsed || typeof parsed !== 'object') return {};
     return parsed as YamlData;
   } catch (e) {
+    // EISDIR is not a corrupt config — it is a container bind mount whose
+    // source file did not exist. Docker creates a directory in its place
+    // instead of failing, and the resulting "illegal operation on a directory"
+    // says nothing about where to look. Name the cause; the generic branch
+    // below keeps handling everything else.
+    if ((e as NodeJS.ErrnoException)?.code === 'EISDIR') {
+      log.warn(
+        `[ServerProviderConfig] ${filename} is a directory, not a file. That is what ` +
+          'Docker leaves behind when a bind mount points at a file that does not exist ' +
+          'yet: remove it, create the file, then recreate the container. Provider ' +
+          'configuration falls back to environment variables meanwhile.',
+      );
+      return {};
+    }
     log.warn(`[ServerProviderConfig] Failed to load ${filename}:`, e);
     return {};
   }

@@ -354,6 +354,7 @@ printf 'AUTH_SESSION_SECRET=%s
 | `AUTH_PROVIDER=windows is not implemented` | Kerberos ещё не реализован, до фазы 5 используйте `test` |
 | статус `unhealthy` | приложение стартовало, но `/api/health` не отвечает; смотрите `logs` |
 | вход зацикливается | стенд по http, а `COOKIE_SECURE=0` не задан |
+| `EISDIR: illegal operation on a directory` | на месте `server-providers.yml` или сертификата лежит каталог, созданный Docker на прошлом запуске. `rm -rf` его, создайте файл, пересоздайте контейнер (`up -d --force-recreate`). Приложение при этом работает — конфигурация провайдеров берётся из переменных |
 
 ---
 

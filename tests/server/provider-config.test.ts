@@ -4,6 +4,8 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 // This prevents YAML config from leaking host-machine state into tests while keeping
 // the mock scoped to what provider-config actually reads.
 let yamlOverride: string | null = null;
+/** When true, reading server-providers.yml fails the way a directory does. */
+let yamlIsDirectory = false;
 
 const ENV_PREFIXES_TO_CLEAR = [
   'OPENAI',
@@ -89,14 +91,22 @@ vi.mock('fs', async (importOriginal) => {
       existsSync: (p: string) => (isYaml(p) ? yamlOverride !== null : actual.existsSync(p)),
       readFileSync: (p: string, ...args: unknown[]) =>
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        isYaml(p) ? (yamlOverride ?? '') : (actual.readFileSync as any)(p, ...args),
+        isYaml(p) ? readYaml() : (actual.readFileSync as any)(p, ...args),
     },
     existsSync: (p: string) => (isYaml(p) ? yamlOverride !== null : actual.existsSync(p)),
     readFileSync: (p: string, ...args: unknown[]) =>
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      isYaml(p) ? (yamlOverride ?? '') : (actual.readFileSync as any)(p, ...args),
+      isYaml(p) ? readYaml() : (actual.readFileSync as any)(p, ...args),
   };
 });
+
+/** What `readFileSync` does for the YAML path, directory case included. */
+function readYaml(): string {
+  if (!yamlIsDirectory) return yamlOverride ?? '';
+  const error: NodeJS.ErrnoException = new Error('EISDIR: illegal operation on a directory, read');
+  error.code = 'EISDIR';
+  throw error;
+}
 
 describe('provider-config', () => {
   beforeEach(() => {
@@ -104,6 +114,7 @@ describe('provider-config', () => {
     vi.unstubAllEnvs();
     clearProviderEnv();
     yamlOverride = null;
+    yamlIsDirectory = false;
   });
 
   describe('resolveApiKey', () => {
@@ -230,6 +241,35 @@ providers:
 `;
       const { resolveProxy } = await import('@/lib/server/provider-config');
       expect(resolveProxy('openai')).toBe('http://proxy.internal:8080');
+    });
+  });
+
+  describe('when server-providers.yml is a directory', () => {
+    // Docker creates a directory where a bind-mount source is missing, so a
+    // stack started before the file existed leaves one behind. Reading it
+    // throws EISDIR, whose message ("illegal operation on a directory") says
+    // nothing about where to look.
+    beforeEach(() => {
+      yamlOverride = 'providers:\n  openai:\n    apiKey: sk-from-yaml\n';
+      yamlIsDirectory = true;
+    });
+
+    it('keeps serving from the environment instead of failing', async () => {
+      vi.stubEnv('OPENAI_API_KEY', 'sk-from-env');
+      const { resolveApiKey } = await import('@/lib/server/provider-config');
+
+      expect(resolveApiKey('openai')).toBe('sk-from-env');
+    });
+
+    it('names the cause rather than reprinting the errno', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { getServerProviders } = await import('@/lib/server/provider-config');
+      getServerProviders();
+
+      const logged = warn.mock.calls.map((call) => call.join(' ')).join('\n');
+      expect(logged).toContain('is a directory, not a file');
+      expect(logged).toContain('bind mount');
+      warn.mockRestore();
     });
   });
 
