@@ -2,8 +2,9 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import resourcesToBackend from 'i18next-resources-to-backend';
 import { supportedLocales } from './locales';
-import { defaultLocale } from './types';
+import { defaultLocale, fallbackLocale } from './types';
 import { workbenchResourceFor } from './workbench';
+import { BRAND_INTERPOLATION_DEFAULTS } from '@/lib/brand/brand-config';
 
 type TranslationResource = Record<string, unknown>;
 
@@ -36,10 +37,17 @@ i18n
   )
   .init({
     lng: defaultLocale,
-    fallbackLng: defaultLocale,
+    // English, not the default. `fallbackLng: defaultLocale` would render
+    // Russian to an English speaker for any key English happens to be missing.
+    fallbackLng: fallbackLocale,
     supportedLngs: supportedLocales.map((l) => l.code),
     interpolation: {
       escapeValue: false,
+      // The product name is brand config, not copy, so translations say
+      // `{{brand}}` and never spell it out. Declared as a default variable so
+      // no call site has to remember to pass it. Mirrored in the hook-free
+      // `createWorkbenchTranslator`.
+      defaultVariables: BRAND_INTERPOLATION_DEFAULTS,
     },
   });
 

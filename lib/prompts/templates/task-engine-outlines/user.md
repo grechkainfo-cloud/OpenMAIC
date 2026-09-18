@@ -8,6 +8,12 @@ Create a Task Engine outline from this vocational task request.
 
 {{userProfile}}
 
+## Language Context
+
+{{languageContext}}
+
+---
+
 ## Reference Materials
 
 ### PDF Content Summary

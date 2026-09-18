@@ -1,16 +1,7 @@
-import type { Locale } from '@/lib/i18n';
-import arSA from '@/lib/i18n/locales/ar-SA.json';
-import deDE from '@/lib/i18n/locales/de-DE.json';
+import type { ContentLocale, Locale } from '@/lib/i18n';
+import { fallbackLocale } from '@/lib/i18n/types';
 import enUS from '@/lib/i18n/locales/en-US.json';
-import esMX from '@/lib/i18n/locales/es-MX.json';
-import frFR from '@/lib/i18n/locales/fr-FR.json';
-import jaJP from '@/lib/i18n/locales/ja-JP.json';
-import koKR from '@/lib/i18n/locales/ko-KR.json';
-import ptBR from '@/lib/i18n/locales/pt-BR.json';
 import ruRU from '@/lib/i18n/locales/ru-RU.json';
-import viVN from '@/lib/i18n/locales/vi-VN.json';
-import zhCN from '@/lib/i18n/locales/zh-CN.json';
-import zhTW from '@/lib/i18n/locales/zh-TW.json';
 import type { VideoExportLabels, VideoExportCta } from '@/lib/video-export';
 
 const DEFAULT_DESTINATION = 'open.maic.chat';
@@ -44,19 +35,13 @@ function normalizePercentHexCase(value: string): string {
   return value.replace(/%[\da-f]{2}/gi, (encoded) => encoded.toUpperCase());
 }
 
+/**
+ * Cover-card chrome per INTERFACE locale. The course's own content language is
+ * separate and unrestricted — see `lib/i18n/locales.ts`.
+ */
 const LOCALE_RESOURCES: Record<Locale, Record<string, unknown>> = {
-  'en-US': enUS,
-  'zh-CN': zhCN,
-  'zh-TW': zhTW,
-  'ja-JP': jaJP,
-  'ko-KR': koKR,
-  'es-MX': esMX,
-  'fr-FR': frFR,
-  'vi-VN': viVN,
-  'pt-BR': ptBR,
   'ru-RU': ruRU,
-  'ar-SA': arSA,
-  'de-DE': deDE,
+  'en-US': enUS,
 };
 
 /**
@@ -176,9 +161,18 @@ export function resolveVideoExportCta(raw: string | undefined): VideoExportCta |
   }
 }
 
-/** Resolve every learner-facing cover label synchronously for one export locale. */
-export function getVideoExportCoverLabels(locale: Locale): VideoExportLabels {
-  const resource = LOCALE_RESOURCES[locale];
+/**
+ * Resolve every learner-facing cover label synchronously for one export locale.
+ *
+ * `locale` is the COURSE's language, which is not limited to the shipped
+ * interface locales — a course can be authored in Arabic while the interface
+ * runs in Russian. The cover chrome ("Quiz", "Stages", "Visit") can only be
+ * written in a language we ship, so a tag we do not have falls back to English
+ * rather than throwing. The authored content keeps its own language, and
+ * direction/script-font planning keys off the same tag independently.
+ */
+export function getVideoExportCoverLabels(locale: ContentLocale): VideoExportLabels {
+  const resource = LOCALE_RESOURCES[locale as Locale] ?? LOCALE_RESOURCES[fallbackLocale];
   const at = (key: string): string => {
     const value = key.split('.').reduce<unknown>((current, part) => {
       if (!current || typeof current !== 'object') return undefined;

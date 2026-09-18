@@ -5,6 +5,7 @@
  * Docs: https://docs.searxng.org/dev/search_api.html
  */
 
+import { BRAND } from '@/lib/brand/brand-config';
 import { createLogger } from '@/lib/logger';
 import { proxyFetch } from '@/lib/server/proxy-fetch';
 import type { WebSearchResult, WebSearchSource } from '@/lib/types/web-search';
@@ -14,7 +15,7 @@ const log = createLogger('SearXNG');
 
 const SEARXNG_HEADERS: Record<string, string> = {
   Accept: 'application/json',
-  'User-Agent': 'Mozilla/5.0 (compatible; OpenMAIC/1.0; +https://github.com/THU-MAIC/OpenMAIC)',
+  'User-Agent': `Mozilla/5.0 (compatible; ${BRAND.userAgent})`,
 };
 
 export function buildSearxngSearchUrl(baseUrl: string, query: string): string {

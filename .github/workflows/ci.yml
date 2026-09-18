@@ -2,21 +2,9 @@ name: CI
 
 on:
   push:
-    # Integration branches are listed here as well as below: a pull_request run
-    # only ever proves one part merged into the branch, so without a push
-    # trigger the accumulated state of the branch that eventually reaches main
-    # is never built on its own.
-    branches: [main, integration/kv-asset-server-backend, integration/agent-workbench]
+    branches: [main]
   pull_request:
-    branches:
-      [
-        main,
-        feat/maic-editor-v0,
-        feat/maic-editor-v1,
-        runtime-server-backend,
-        integration/kv-asset-server-backend,
-        integration/agent-workbench,
-      ]
+    branches: [main]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -26,21 +14,6 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  issue-triage:
-    name: Issue Triage (offline contracts)
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version: 22
-      - run: node --test .github/scripts/issue-triage.test.mjs
-
   check:
     name: Lint, Typecheck & Unit Tests
     runs-on: ubuntu-latest
@@ -143,7 +116,9 @@ jobs:
             'prettier' 'pnpm check' \
             'eslint' 'pnpm lint' \
             'tsc' 'npx tsc --noEmit' \
-            'i18n' 'pnpm check:i18n-keys'
+            'i18n' 'pnpm check:i18n-keys' \
+            'brand-contrast' 'pnpm check:brand-contrast' \
+            'brand-fonts' 'pnpm check:brand-fonts'
 
       # Keep these sequential. Running root vitest alongside the storage
       # package on a 4-core runner made 5s-timeout tests flake (CPU

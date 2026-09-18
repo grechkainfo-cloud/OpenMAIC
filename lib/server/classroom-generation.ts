@@ -63,6 +63,14 @@ export interface GenerateClassroomInput {
   enableVideoGeneration?: boolean;
   enableTTS?: boolean;
   agentMode?: 'default' | 'generate';
+  /**
+   * BCP-47 tag of the requester's interface language. The course language
+   * defaults to it, so a topic typed in one language does not decide what
+   * language the course is taught in. An explicit request in the requirement
+   * still wins. Omitted, the language is inferred from the requirement as
+   * before.
+   */
+  interfaceLanguage?: string;
 }
 
 export type ClassroomGenerationStep =
@@ -523,6 +531,7 @@ export async function generateClassroom(
       imageGenerationEnabled: input.enableImageGeneration,
       videoGenerationEnabled: input.enableVideoGeneration,
       researchContext,
+      interfaceLanguage: input.interfaceLanguage,
       // NO teacherContext — agents haven't been generated yet
     },
   );

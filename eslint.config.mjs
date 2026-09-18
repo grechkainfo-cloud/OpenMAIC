@@ -23,6 +23,55 @@ const AI_SDK_DYNAMIC_IMPORT_BAN = [
   },
 ];
 
+/**
+ * The product shell must not spell the brand out.
+ *
+ * Phase 1 moved names, logos and colour tokens into `lib/brand/brand-config.ts`
+ * so a rebrand is one config edit plus a directory of assets. That promise only
+ * holds if it cannot quietly rot: one `alt="OpenMAIC"` added in a hurry and the
+ * next rebrand is a find-and-replace across the UI again.
+ *
+ * Read the name from `useBrand()` (client) or `lib/brand/brand-server` (server),
+ * and interpolate it into translations as `{{brand}}` / `{{brandAgent}}`.
+ */
+const BRAND_LITERAL_BAN = [
+  {
+    selector: 'Literal[value=/OpenMAIC|MAIC Agent/]',
+    message:
+      'Do not hardcode the product name. Read it from useBrand() (client) or @/lib/brand/brand-server (server); in translations use {{brand}} / {{brandAgent}}. See docs/branding.md.',
+  },
+  {
+    selector: 'JSXText[value=/OpenMAIC|MAIC Agent/]',
+    message:
+      'Do not hardcode the product name in JSX text. Render {brand.productName} from useBrand(), or a translation that interpolates {{brand}}. See docs/branding.md.',
+  },
+  {
+    selector: 'TemplateElement[value.cooked=/OpenMAIC|MAIC Agent/]',
+    message:
+      'Do not hardcode the product name in a template literal. Interpolate BRAND.productName instead. See docs/branding.md.',
+  },
+];
+
+/**
+ * Colour literals in the app shell.
+ *
+ * Every colour the shell paints has a token in `app/brand-tokens.css`, which is
+ * generated from `BRAND.theme`. A raw `#rrggbb` here is a colour a rebrand
+ * cannot reach and a theme switch cannot repaint.
+ *
+ * Scoped to `app/**` deliberately. `components/**` still holds ~90 local colour
+ * literals (renderer internals, the PBL surface's own chrome); those are real
+ * debt, but paying it is a design pass, not a lint flag — see docs/branding.md
+ * for the count and the command that lists them.
+ */
+const HEX_COLOR_BAN = [
+  {
+    selector: 'Literal[value=/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/]',
+    message:
+      'Do not hardcode a colour in the app shell. Use a design token from app/brand-tokens.css (Tailwind: bg-primary, text-muted-foreground, …), which is generated from BRAND.theme. See docs/branding.md.',
+  },
+];
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -34,7 +83,6 @@ const eslintConfig = defineConfig([
     'build/**',
     'next-env.d.ts',
     // Third-party / vendored packages (not our code):
-    'packages/docs/**',
     'packages/mathml2omml/**',
     'packages/pptxgenjs/**',
     // Our own @openmaic/* packages: lint the source, but skip build output,
@@ -663,6 +711,36 @@ const eslintConfig = defineConfig([
     ],
     rules: {
       'no-restricted-syntax': ['error', ...AI_SDK_DYNAMIC_IMPORT_BAN],
+    },
+  },
+
+  // Brand boundary for the app shell. These two blocks come last, so for the
+  // paths they match they REPLACE the repo-wide no-restricted-syntax above —
+  // which is why each one spreads AI_SDK_DYNAMIC_IMPORT_BAN back in. Files
+  // these blocks ignore keep falling through to the repo-wide block, so they
+  // still carry the AI SDK ban.
+  {
+    files: ['app/**/*.{ts,tsx}'],
+    // app/eval is a developer harness for the whiteboard renderer: its colours
+    // are fixture data for the thing under test, not product chrome.
+    ignores: ['app/eval/**'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        ...AI_SDK_DYNAMIC_IMPORT_BAN,
+        ...BRAND_LITERAL_BAN,
+        ...HEX_COLOR_BAN,
+      ],
+    },
+  },
+  {
+    files: ['components/**/*.{ts,tsx}'],
+    // `X-OpenMAIC-Element-Reference-Accepted` is a wire-protocol header name
+    // agreed with lib/chat/pi/element-reference.ts and asserted in e2e.
+    // Renaming it with the brand would break the contract, not follow it.
+    ignores: ['components/chat/element-reference-receipt.ts'],
+    rules: {
+      'no-restricted-syntax': ['error', ...AI_SDK_DYNAMIC_IMPORT_BAN, ...BRAND_LITERAL_BAN],
     },
   },
 ]);

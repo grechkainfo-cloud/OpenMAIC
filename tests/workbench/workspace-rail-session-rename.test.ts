@@ -20,7 +20,10 @@ vi.mock('@/lib/hooks/use-i18n', () => ({
   useI18n: () => ({ t: (key: string) => key }),
 }));
 vi.mock('@/lib/brand/brand-context', () => ({
-  useBrand: () => ({ markSrc: '/mark.svg', logoSrc: '/logo.svg' }),
+  useBrand: () => ({
+    productName: 'Test Brand',
+    logo: { light: '/logo.svg', mark: '/mark.svg', hasWordmark: true },
+  }),
 }));
 vi.mock('@/components/workbench/ProBadge', () => ({ ProBadge: () => null }));
 vi.mock('@/components/language-switcher', () => ({ LanguageSwitcher: () => null }));

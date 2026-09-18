@@ -9,6 +9,13 @@ export interface InlineOptions {
   fetcher?: FetchAsset;
   /** Keep original remote import-map entries as an online fallback. Default true. */
   keepImportmapFallbacks?: boolean;
+  /**
+   * Base for resolving relative asset references. Defaults to
+   * `document.baseURI` in a browser and to nothing elsewhere — with no base,
+   * only absolute http(s) references are inlined, which is what this module
+   * did before relative resolution existed.
+   */
+  baseUrl?: string;
 }
 
 export type FetchAsset = (

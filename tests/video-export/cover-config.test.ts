@@ -149,65 +149,15 @@ describe('getVideoExportCoverLabels', () => {
       'quizCtaPrompt' | 'pblCtaPrompt' | 'ctaVisit'
     >
   > = {
-    'en-US': {
-      quizCtaPrompt: 'Want to try an interactive quiz?',
-      pblCtaPrompt: 'Want to explore project-based learning?',
-      ctaVisit: 'Visit',
-    },
-    'zh-CN': {
-      quizCtaPrompt: '想亲自体验互动测验？',
-      pblCtaPrompt: '想亲自参与项目学习？',
-      ctaVisit: '访问',
-    },
-    'zh-TW': {
-      quizCtaPrompt: '想親自體驗互動測驗？',
-      pblCtaPrompt: '想親自參與專題式學習？',
-      ctaVisit: '前往',
-    },
-    'ja-JP': {
-      quizCtaPrompt: 'インタラクティブなクイズを体験しませんか？',
-      pblCtaPrompt: 'プロジェクト型学習を体験しませんか？',
-      ctaVisit: 'アクセス',
-    },
-    'ko-KR': {
-      quizCtaPrompt: '인터랙티브 퀴즈를 직접 체험해 보세요',
-      pblCtaPrompt: '프로젝트 기반 학습을 직접 체험해 보세요',
-      ctaVisit: '방문',
-    },
-    'es-MX': {
-      quizCtaPrompt: '¿Quieres probar un cuestionario interactivo?',
-      pblCtaPrompt: '¿Quieres explorar el aprendizaje basado en proyectos?',
-      ctaVisit: 'Visita',
-    },
-    'fr-FR': {
-      quizCtaPrompt: 'Envie d’essayer un quiz interactif ?',
-      pblCtaPrompt: 'Envie d’explorer l’apprentissage par projet ?',
-      ctaVisit: 'Découvrir',
-    },
-    'vi-VN': {
-      quizCtaPrompt: 'Muốn thử một bài trắc nghiệm tương tác?',
-      pblCtaPrompt: 'Muốn khám phá học tập theo dự án?',
-      ctaVisit: 'Ghé thăm',
-    },
-    'de-DE': {
-      quizCtaPrompt: 'Möchtest du ein interaktives Quiz ausprobieren?',
-      pblCtaPrompt: 'Möchtest du projektbasiertes Lernen entdecken?',
-      ctaVisit: 'Besuche',
-    },
-    'pt-BR': {
-      quizCtaPrompt: 'Quer experimentar um quiz interativo?',
-      pblCtaPrompt: 'Quer explorar a aprendizagem baseada em projetos?',
-      ctaVisit: 'Acesse',
-    },
     'ru-RU': {
       quizCtaPrompt: 'Хотите пройти интерактивный тест?',
       pblCtaPrompt: 'Хотите попробовать проектное обучение?',
       ctaVisit: 'Посетите',
     },
-    'ar-SA': {
-      quizCtaPrompt: 'هل تريد تجربة اختبار تفاعلي؟',
-      pblCtaPrompt: 'هل تريد استكشاف التعلم القائم على المشاريع؟',
-      ctaVisit: 'تفضل بزيارة',
+    'en-US': {
+      quizCtaPrompt: 'Want to try an interactive quiz?',
+      pblCtaPrompt: 'Want to explore project-based learning?',
+      ctaVisit: 'Visit',
     },
   };
 
@@ -215,6 +165,16 @@ describe('getVideoExportCoverLabels', () => {
     'returns the approved CTA strings for %s',
     (locale, expected) => {
       expect(getVideoExportCoverLabels(locale)).toMatchObject(expected);
+    },
+  );
+
+  it.each(['ar-SA', 'zh-CN', 'de-DE', 'xx-YY'])(
+    'falls back to English chrome for %s, a language the interface does not ship',
+    (contentLocale) => {
+      // A course can be authored in any language; the cover chrome can only be
+      // written in one the app ships. Falling back is the correct outcome —
+      // throwing would make an Arabic course unexportable.
+      expect(getVideoExportCoverLabels(contentLocale)).toMatchObject(expectedCtaLabels['en-US']);
     },
   );
 });

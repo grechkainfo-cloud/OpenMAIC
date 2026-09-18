@@ -6,7 +6,8 @@ import { AnimatePresence, Reorder, motion, useReducedMotion } from 'motion/react
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { useBrand, useIsDesktop } from '@/lib/brand/brand-context';
+import { useIsDesktop } from '@/lib/brand/brand-context';
+import { useBrandLogo } from '@/lib/brand/use-brand-logo';
 import { useStageStore } from '@/lib/store';
 import { useSettingsStore } from '@/lib/store/settings';
 import { useI18n } from '@/lib/hooks/use-i18n';
@@ -51,7 +52,7 @@ const RAIL_MAX_PX = 360;
 export function SlideNavRail() {
   const { t } = useI18n();
   const router = useRouter();
-  const brand = useBrand();
+  const brandLogo = useBrandLogo('horizontal');
   const isDesktop = useIsDesktop();
   const inWorkbenchPanel = useInWorkbenchPanel();
   const scenes = useStageStore.use.scenes();
@@ -408,7 +409,7 @@ export function SlideNavRail() {
             >
               {/* Desktop client: the Electron title bar already shows the brand icon + name, so the edit rail doesn't repeat it;
                   returning home is handled by the edit bar's CommandBar back arrow. */}
-              <img src={brand.logoSrc} alt={brand.productName} className="h-6 w-auto" />
+              <img src={brandLogo.src} alt={brandLogo.alt} className="h-6 w-auto" />
             </button>
           )}
         </div>

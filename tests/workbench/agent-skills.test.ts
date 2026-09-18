@@ -26,7 +26,7 @@ const skill = (id: string, title?: string) => ({
 
 describe('skill display labels', () => {
   it('names a built-in skill from the copy map, in this locale, AND by its id', () => {
-    expect(skillDisplayLabel(skill('stage-design'))).toBe('课堂设计 /stage-design');
+    expect(skillDisplayLabel(skill('stage-design'))).toBe('Проектирование класса /stage-design');
     expect(skillDisplayLabel(skill('stage-design'), createWorkbenchTranslator('en-US'))).toBe(
       'Classroom design /stage-design',
     );
@@ -52,12 +52,12 @@ describe('skill display labels', () => {
   it('resolves an id against the installed list, and names a built-in id on its own', () => {
     const installed = [skill('stage-design', '课堂设计'), skill('pptx-import', 'PPT 导入')];
     // The timeline's case: a transcript records the id only.
-    expect(skillLabelForId('pptx-import', installed)).toBe('PPT 导入 /pptx-import');
+    expect(skillLabelForId('pptx-import', installed)).toBe('Импорт PPT /pptx-import');
     // A skill that is no longer installed: the row still says which one was read.
     expect(skillLabelForId('retired-skill', installed)).toBe('/retired-skill');
     // A registry that has not loaded yet still names a BUILT-IN skill, because
     // its display copy does not come from the registry.
-    expect(skillLabelForId('pptx-import', [])).toBe('PPT 导入 /pptx-import');
+    expect(skillLabelForId('pptx-import', [])).toBe('Импорт PPT /pptx-import');
   });
 });
 

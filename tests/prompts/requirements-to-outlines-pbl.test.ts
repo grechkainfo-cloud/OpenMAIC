@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { buildPrompt, PROMPT_IDS } from '@openmaic/generation';
+import { buildLanguageContext, buildPrompt, PROMPT_IDS } from '@openmaic/generation';
 
 function outlinePromptText() {
   const prompt = buildPrompt(PROMPT_IDS.REQUIREMENTS_TO_OUTLINES, {
@@ -9,6 +9,7 @@ function outlinePromptText() {
     userProfile: '',
     researchContext: 'None',
     teacherContext: '',
+    languageContext: buildLanguageContext(),
     hasSourceImages: false,
     imageEnabled: false,
     videoEnabled: false,

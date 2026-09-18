@@ -8,7 +8,10 @@ export class HomePage {
 
   constructor(page: Page) {
     this.page = page;
-    this.logo = page.locator('img[alt="OpenMAIC"]');
+    // Located by testid, not by alt text: alt is the product name, which the
+    // brand config owns, so a rebrand would otherwise break every spec that
+    // waits for the homepage to be up.
+    this.logo = page.getByTestId('brand-logo');
     this.textarea = page.locator('textarea');
     this.enterButton = page
       .getByRole('button', { name: /enter/i })

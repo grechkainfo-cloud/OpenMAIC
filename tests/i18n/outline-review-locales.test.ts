@@ -1,23 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import enUS from '@/lib/i18n/locales/en-US.json';
-import zhCN from '@/lib/i18n/locales/zh-CN.json';
-import zhTW from '@/lib/i18n/locales/zh-TW.json';
-import jaJP from '@/lib/i18n/locales/ja-JP.json';
-import ruRU from '@/lib/i18n/locales/ru-RU.json';
-import arSA from '@/lib/i18n/locales/ar-SA.json';
-import koKR from '@/lib/i18n/locales/ko-KR.json';
-import ptBR from '@/lib/i18n/locales/pt-BR.json';
+import { localeResourceMap, resolveLocaleKey } from './locale-resources';
 
-const locales = {
-  'en-US': enUS,
-  'zh-CN': zhCN,
-  'zh-TW': zhTW,
-  'ja-JP': jaJP,
-  'ru-RU': ruRU,
-  'ar-SA': arSA,
-  'ko-KR': koKR,
-  'pt-BR': ptBR,
-} as const;
+const locales = localeResourceMap;
 
 const outlineReviewKeys = [
   'generation.reviewOutlineTitle',
@@ -104,7 +88,7 @@ describe('outline review locale coverage', () => {
   it('defines outline review copy in every supported locale', () => {
     for (const [localeCode, localeData] of Object.entries(locales)) {
       for (const key of outlineReviewKeys) {
-        const value = getKey(localeData, key);
+        const value = resolveLocaleKey(localeData, key);
 
         expect(value, `${localeCode} is missing ${key}`).toBeTypeOf('string');
         expect(value, `${localeCode} should not echo ${key}`).not.toBe(key);
@@ -113,7 +97,7 @@ describe('outline review locale coverage', () => {
 
       for (const key of countInterpolatedKeys) {
         expect(
-          getKey(localeData, key),
+          resolveLocaleKey(localeData, key),
           `${localeCode} should preserve {{count}} in ${key}`,
         ).toContain('{{count}}');
       }

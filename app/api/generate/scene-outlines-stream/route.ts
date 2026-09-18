@@ -25,7 +25,7 @@ import {
   formatTeacherPersonaForPrompt,
 } from '@openmaic/generation';
 import type { AgentInfo } from '@openmaic/generation';
-import { DEFAULT_LANGUAGE_DIRECTIVE } from '@openmaic/generation';
+import { buildLanguageContext, defaultLanguageDirectiveFor } from '@openmaic/generation';
 import { MAX_PDF_CONTENT_CHARS, MAX_VISION_IMAGES } from '@/lib/constants/generation';
 import { nanoid } from 'nanoid';
 import type {
@@ -410,6 +410,12 @@ export async function POST(req: NextRequest) {
     // Build teacher context from agents (if available)
     const teacherContext = formatTeacherPersonaForPrompt(agents);
 
+    // The language the learner set the interface to. Without it the course
+    // language is inferred from the requirement text alone, which makes a
+    // two-word English topic typed into a Russian interface produce an English
+    // course. An explicit language request in the requirement still wins.
+    const interfaceLanguage = req.headers.get('x-user-locale')?.trim() || undefined;
+
     // Check if Interactive Mode or server-enabled Task Engine mode is enabled.
     const interactiveMode = requirements.interactiveMode ?? false;
     const taskEngineMode = resolveVocationalActive(requirements);
@@ -419,6 +425,7 @@ export async function POST(req: NextRequest) {
     // images removed, mapping naming only resolved ids) so its placeholder
     // text never promises an image this route will not attach.
     let prompts: { system: string; user: string } | null = buildOutlinePrompt(requirements, {
+      interfaceLanguage,
       pdfText,
       pdfImages: resolvedPdfImages ?? pdfImages,
       visionEnabled: hasVision,
@@ -444,6 +451,7 @@ export async function POST(req: NextRequest) {
         mediaEnabled: mediaGenerationEnabled,
         teacherContext,
         userProfile: userProfileText,
+        languageContext: buildLanguageContext(interfaceLanguage),
       });
     }
 
@@ -665,7 +673,8 @@ export async function POST(req: NextRequest) {
             const doneEvent = JSON.stringify({
               type: 'done',
               outlines: uniquifiedOutlines,
-              languageDirective: languageDirective || DEFAULT_LANGUAGE_DIRECTIVE,
+              languageDirective:
+                languageDirective || defaultLanguageDirectiveFor(interfaceLanguage),
               courseTitle: courseTitle || undefined,
               taskEngineMode,
             });

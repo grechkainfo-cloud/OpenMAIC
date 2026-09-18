@@ -3,15 +3,14 @@
 /**
  * Brand context.
  *
- * The reference resolves the brand and the desktop flag on the server per
- * request (vendor UA parsing) and injects them through the provider. This
- * workspace is single-brand and has no desktop shell, so the provider accepts
- * the values as props (for future wiring) and defaults to the static brand /
- * non-desktop, which is also what the hooks read when no provider is mounted.
+ * The brand is static per build (see `./brand-config`), so the default context
+ * value already carries it and `useBrand()` works without a provider mounted.
+ * `BrandProvider` exists for tests and for a future per-request resolution
+ * (a vendor shell, a white-label host) that would inject a different config.
  */
 
 import { createContext, useContext } from 'react';
-import { DEFAULT_BRAND, type BrandConfig } from './brand-config';
+import { BRAND, type BrandConfig } from './brand-config';
 
 interface BrandContextValue {
   brand: BrandConfig;
@@ -20,12 +19,12 @@ interface BrandContextValue {
 }
 
 const BrandContext = createContext<BrandContextValue>({
-  brand: DEFAULT_BRAND,
+  brand: BRAND,
   isDesktop: false,
 });
 
 export function BrandProvider({
-  brand = DEFAULT_BRAND,
+  brand = BRAND,
   isDesktop = false,
   children,
 }: {

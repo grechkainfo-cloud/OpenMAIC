@@ -52,7 +52,14 @@ function compileSample() {
 
 describe('emitHyperframes', () => {
   const ir = compileSample();
-  const project = emitHyperframes(ir, { width: 1920, height: 1080 });
+  // A name that is deliberately NOT the shipping brand: the emitter must carry
+  // whatever the caller hands it, and a snapshot showing the real product name
+  // could not tell "threaded correctly" from "hardcoded in the emitter".
+  const project = emitHyperframes(ir, {
+    width: 1920,
+    height: 1080,
+    productName: 'Test Brand',
+  });
   const html = project.files.find((f) => f.path === 'index.html')!.content;
 
   it('emits the self-contained project file set', () => {
@@ -185,6 +192,20 @@ describe('emitHyperframes', () => {
   it('references vendored GSAP, never a CDN', () => {
     expect(html).toContain('<script src="assets/vendor/gsap.min.js"></script>');
     expect(project.gsapVendorPath).toBe('assets/vendor/gsap.min.js');
+  });
+
+  it('carries no product name of its own when the caller passes none', () => {
+    // The emitter may not import the brand config — it is fenced to in-module
+    // relatives so the emitted composition stays self-contained (see
+    // eslint.config.mjs). This is the assertion that keeps a convenience
+    // `?? 'SomeBrand'` default from creeping back in.
+    const unbranded = emitHyperframes(ir, { width: 1280, height: 720 });
+    const unbrandedHtml = unbranded.files.find((f) => f.path === 'index.html')!.content;
+    const readme = unbranded.files.find((f) => f.path === 'README.md')!.content;
+
+    expect(unbrandedHtml).toContain('<title>Sample Lesson — video</title>');
+    expect(readme).toContain('# Sample Lesson — video export');
+    expect(unbrandedHtml).not.toContain('Test Brand');
   });
 
   it('matches the HTML snapshot', () => {

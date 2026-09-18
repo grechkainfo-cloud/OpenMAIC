@@ -39,7 +39,7 @@ describe('pi read', () => {
         toolArgs: { path: '/app/skills/agent-runtime/deep-interactive/SKILL.md' },
       }),
     );
-    expect(presentation.label).toBe('加载 skill');
+    expect(presentation.label).toBe('Загрузить скилл');
     expect(presentation.subject).toBe('deep-interactive');
     expect(presentation.hidePayload).toBe(true);
     expect(
@@ -53,8 +53,8 @@ describe('pi read', () => {
 
   it('never invents a no-match skill decision', () => {
     const presentation = presentTool(toolNode({ toolArgs: { path: '/app/skills/reference.md' } }));
-    expect(presentation.label).toBe('读取文件');
-    expect(presentation.label).not.toContain('无匹配');
+    expect(presentation.label).toBe('Прочитать файл');
+    expect(presentation.label).not.toContain('Скилл');
   });
 });
 
@@ -75,12 +75,12 @@ describe('generic typed tool presentation', () => {
       }),
     );
     expect(presentation).toMatchObject({
-      label: '已保存 Skill',
+      label: 'Skill сохранён',
       subject: '复盘方法 /my-review · 用于结构化复盘',
       expandedResultText: '# 复盘\n\n完整步骤',
     });
     expect(presentation.hidePayload).toBeUndefined();
-    expect(presentation.chips).toContainEqual({ label: '可在新会话调用', tone: 'accent' });
+    expect(presentation.chips).toContainEqual({ label: 'Доступно в новой сессии', tone: 'accent' });
   });
 
   it('keeps running and failed create_skill input out of the result section', () => {
@@ -112,10 +112,10 @@ describe('generic typed tool presentation', () => {
 
 describe('material tool presentation', () => {
   it.each([
-    ['list_materials', '检查材料'],
-    ['read_material', '读取材料'],
-    ['use_material_media', '复用媒体素材'],
-    ['search_material', '搜索材料'],
+    ['list_materials', 'Проверить материалы'],
+    ['read_material', 'Прочитать материал'],
+    ['use_material_media', 'Использовать медиа из материала'],
+    ['search_material', 'Искать в материалах'],
   ])('shows %s as a quiet human-labelled card', (toolName, label) => {
     const presentation = presentTool(
       toolNode({
@@ -138,8 +138,8 @@ describe('material tool presentation', () => {
     });
     expect(isWorkbenchToolFailed(node)).toBe(true);
     expect(presentTool(node)).toMatchObject({
-      label: '检查材料',
-      errorText: '材料解析失败',
+      label: 'Проверить материалы',
+      errorText: 'Не удалось разобрать материал',
       hidePayload: true,
     });
   });
@@ -155,34 +155,34 @@ describe('material tool presentation', () => {
 describe('every tool has a verb of its own', () => {
   it.each([
     // The series layer.
-    ['create_stage', '新建课堂'],
-    ['read_stage_outline', '读取课堂大纲'],
+    ['create_stage', 'Создать класс'],
+    ['read_stage_outline', 'Прочитать план класса'],
     // Pages, narration and audio.
-    ['generate_scene', '生成页面'],
-    ['duplicate_scene', '复制页面'],
-    ['generate_actions', '生成旁白'],
-    ['generate_tts', '合成语音'],
-    ['render_scene_preview', '预览页面'],
-    ['edit_deck', '调整页序'],
+    ['generate_scene', 'Создать страницу'],
+    ['duplicate_scene', 'Скопировать страницу'],
+    ['generate_actions', 'Создать озвучку'],
+    ['generate_tts', 'Синтезировать речь'],
+    ['render_scene_preview', 'Предпросмотр страницы'],
+    ['edit_deck', 'Изменить порядок страниц'],
     // Stage-document tools.
-    ['read_stage', '读取课堂'],
-    ['patch_stage', '编辑课堂'],
-    ['grep_stage', '搜索课堂'],
+    ['read_stage', 'Прочитать класс'],
+    ['patch_stage', 'Изменить класс'],
+    ['grep_stage', 'Искать в классе'],
     // Reading its own work.
-    ['list_scenes', '检查当前课堂'],
+    ['list_scenes', 'Проверить текущий класс'],
     // Material, questions, the web.
-    ['list_materials', '检查材料'],
-    ['read_material', '读取材料'],
-    ['use_material_media', '复用媒体素材'],
-    ['search_material', '搜索材料'],
-    ['ask_user', '向你确认'],
-    ['web_search', '联网搜索'],
-    ['fetch_url', '抓取网页'],
+    ['list_materials', 'Проверить материалы'],
+    ['read_material', 'Прочитать материал'],
+    ['use_material_media', 'Использовать медиа из материала'],
+    ['search_material', 'Искать в материалах'],
+    ['ask_user', 'Уточнить у вас'],
+    ['web_search', 'Поиск в интернете'],
+    ['fetch_url', 'Загрузить веб-страницу'],
     // Personal history.
-    ['search_classrooms', '搜索课堂'],
-    ['read_classroom', '读取课堂'],
-    ['search_chats', '搜索对话'],
-    ['read_chat', '读取对话'],
+    ['search_classrooms', 'Искать классы'],
+    ['read_classroom', 'Прочитать класс'],
+    ['search_chats', 'Искать переписки'],
+    ['read_chat', 'Прочитать переписку'],
   ])('labels %s as %s', (toolName, label) => {
     expect(presentTool(toolNode({ toolName })).label).toBe(label);
   });
@@ -197,10 +197,14 @@ describe('every tool has a verb of its own', () => {
         }),
       ),
     ).toMatchObject({
-      label: '搜索对话',
+      label: 'Искать переписки',
       subject: '语音',
       hidePayload: true,
-      chips: [{ label: '5 条', tone: 'accent' }, { label: '11–15' }, { label: '还有下一页' }],
+      chips: [
+        { label: 'Записей: 5', tone: 'accent' },
+        { label: '11–15' },
+        { label: 'Есть ещё результаты' },
+      ],
     });
   });
 
@@ -209,9 +213,9 @@ describe('every tool has a verb of its own', () => {
     // `generate_scene` has always said "generate page 3".
     expect(
       presentTool(toolNode({ toolName: 'generate_actions', toolDetails: { order: 3 } })).label,
-    ).toBe('生成第 3 页旁白');
+    ).toBe('Создать озвучку страницы 3');
     expect(presentTool(toolNode({ toolName: 'generate_tts', toolArgs: { order: 2 } })).label).toBe(
-      '合成第 2 页语音',
+      'Синтезировать речь страницы 2',
     );
   });
 });
@@ -222,11 +226,11 @@ describe('series layer subjects', () => {
       presentTool(
         toolNode({
           toolName: 'create_stage',
-          toolArgs: { title: '第 1 天：先跑起来' },
-          toolDetails: { stageId: 'stage-x', title: '第 1 天：先跑起来' },
+          toolArgs: { title: '第 1 天: 先跑起来' },
+          toolDetails: { stageId: 'stage-x', title: '第 1 天: 先跑起来' },
         }),
       ),
-    ).toMatchObject({ label: '新建课堂', subject: '第 1 天：先跑起来' });
+    ).toMatchObject({ label: 'Создать класс', subject: '第 1 天: 先跑起来' });
   });
 
   it('reads a stage outline as its title and page list', () => {
@@ -236,7 +240,7 @@ describe('series layer subjects', () => {
         toolArgs: { stageId: 'stage-x' },
         toolDetails: {
           stageId: 'stage-x',
-          title: '第 1 天：先跑起来',
+          title: '第 1 天: 先跑起来',
           pageCount: 2,
           pages: [
             { order: 1, title: '装环境', type: 'slide' },
@@ -245,9 +249,9 @@ describe('series layer subjects', () => {
         },
       }),
     );
-    expect(presentation.subject).toBe('第 1 天：先跑起来');
+    expect(presentation.subject).toBe('第 1 天: 先跑起来');
     expect(presentation.detail).toBe('1. 装环境 · 2. 第一个脚本');
-    expect(presentation.chips).toEqual([{ label: '2 页', tone: 'accent' }]);
+    expect(presentation.chips).toEqual([{ label: 'Страниц: 2', tone: 'accent' }]);
   });
 });
 
@@ -255,12 +259,12 @@ describe('generate_scene card', () => {
   it('names the page it is writing, and marks a revision as one', () => {
     expect(
       presentTool(toolNode({ toolName: 'generate_scene', toolArgs: { order: 4 } })).label,
-    ).toBe('生成第 4 页');
+    ).toBe('Создать страницу 4');
     const revision = presentTool(
       toolNode({ toolName: 'generate_scene', toolArgs: { order: 4, instruction: '再加一个例子' } }),
     );
-    expect(revision.label).toBe('生成第 4 页');
-    expect(revision.chips).toEqual([{ label: '按指示修订', tone: 'accent' }]);
+    expect(revision.label).toBe('Создать страницу 4');
+    expect(revision.chips).toEqual([{ label: 'Исправлено по указанию', tone: 'accent' }]);
     expect(revision.detail).toBe('再加一个例子');
   });
 });
@@ -287,13 +291,13 @@ describe('ask_user card', () => {
       }),
     );
     expect(presentation).toMatchObject({
-      label: '向你确认',
+      label: 'Уточнить у вас',
       subject: '这门课的听众是谁？',
       // The question card and the answer form already render the question; the
       // disclosure would be the same sentence a third time.
       hidePayload: true,
     });
-    expect(presentation.chips).toEqual([{ label: '2 个选项' }]);
+    expect(presentation.chips).toEqual([{ label: 'Вариантов: 2' }]);
   });
 });
 
@@ -311,9 +315,9 @@ describe('audio details', () => {
       }),
     );
     expect(presentation.chips).toEqual([
-      { label: '3 个动作', tone: 'accent' },
-      { label: '2 句配了音' },
-      { label: '1 句没配上音', tone: 'warn' },
+      { label: 'Действий: 3', tone: 'accent' },
+      { label: 'Озвучено фраз: 2' },
+      { label: 'Фраз без озвучки: 1', tone: 'warn' },
     ]);
   });
 
@@ -326,7 +330,9 @@ describe('audio details', () => {
         toolResultText: 'No server TTS provider is configured, so nothing was synthesized.',
       }),
     );
-    expect(presentation.errorText).toBe('这台部署没有配置语音合成，这一页仍然没有声音');
+    expect(presentation.errorText).toBe(
+      'Синтез речи не настроен, поэтому на этой странице по-прежнему нет звука',
+    );
   });
 });
 
@@ -339,7 +345,7 @@ describe('DSL stage tools', () => {
         toolDetails: { path: '/outline', detail: 'source', totalChars: 1024 },
       }),
     );
-    expect(presentation).toMatchObject({ label: '读取课堂', subject: '/outline' });
+    expect(presentation).toMatchObject({ label: 'Прочитать класс', subject: '/outline' });
     // The whole stage (path "") reads as the verb alone, never the wire id.
     expect(
       presentTool(toolNode({ toolName: 'read_stage', toolArgs: { stageId: 'stage-x', path: '' } }))
@@ -359,9 +365,9 @@ describe('DSL stage tools', () => {
       }),
     );
     expect(presentation).toMatchObject({
-      label: '编辑课堂',
+      label: 'Изменить класс',
       subject: '改标题为「光的折射」',
-      chips: [{ label: '第 3 页' }],
+      chips: [{ label: 'Страница 3' }],
     });
   });
 
@@ -373,10 +379,10 @@ describe('DSL stage tools', () => {
         toolDetails: { query: '折射', scope: 'text', hits: [{}, {}], truncated: true },
       }),
     );
-    expect(presentation).toMatchObject({ label: '搜索课堂', subject: '折射' });
+    expect(presentation).toMatchObject({ label: 'Искать в классе', subject: '折射' });
     expect(presentation.chips).toEqual([
-      { label: '2 处命中', tone: 'accent' },
-      { label: '已截断', tone: 'warn' },
+      { label: 'Совпадений: 2', tone: 'accent' },
+      { label: 'Обрезано', tone: 'warn' },
     ]);
   });
 });
@@ -399,12 +405,12 @@ describe('untrusted content stays labelled data', () => {
       }),
     );
     expect(presentation).toMatchObject({
-      label: '抓取网页',
+      label: 'Загрузить веб-страницу',
       // The subject is the URL from the ARGUMENTS — product chrome — never the
       // fetched page's own title or body.
       subject: 'https://untrusted.example/page',
     });
-    expect(presentation.chips).toContainEqual({ label: '来源不在本会话内', tone: 'warn' });
+    expect(presentation.chips).toContainEqual({ label: 'Источник вне этой сессии', tone: 'warn' });
     // The fetched body is data, not speech: the presentation is built from the
     // argument and the trusted-status chip, and the raw body never leaks into
     // the summary or the disclosure text of the collapsed row.

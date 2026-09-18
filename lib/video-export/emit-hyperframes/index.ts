@@ -163,6 +163,16 @@ export interface EmitHyperframesOptions {
    */
   locale?: string;
   /**
+   * Product name stamped on the emitted `<title>` and README heading.
+   *
+   * Passed in rather than imported: this module may only reach in-module
+   * relatives (enforced in eslint.config.mjs) so the emitted composition stays
+   * self-contained and render-backend-agnostic. The app-side caller reads it
+   * from the brand config and hands it over. Omitted — as in unit tests — the
+   * output simply carries no product name rather than a hardcoded one.
+   */
+  productName?: string;
+  /**
    * Burn the subtitle overlay into the composition (baked into the video by the
    * frame capture). Default `false`: the video renders clean and the narration
    * subtitles ship only as the sidecar `subtitles.srt` / `.vtt`, which a user
@@ -1116,6 +1126,7 @@ function renderReadme(project: {
   gsapVendorPath: string;
   manifestPath: string;
   stageName: string;
+  productName: string;
   locale: string;
   burnInSubtitles: boolean;
   labels: VideoExportLabels;
@@ -1160,7 +1171,7 @@ function renderReadme(project: {
   const scriptFontSummary = project.quizScriptFonts.length
     ? `, ${project.quizScriptFonts.join(' and ')}`
     : '';
-  return `# ${project.stageName} — OpenMAIC video export
+  return `# ${project.stageName} —${project.productName ? ` ${project.productName}` : ''} video export
 
 Self-contained [Hyperframes](https://github.com/heygen-com/hyperframes) composition
 for the classroom **${project.stageName}**. Everything needed to render is in this
@@ -1236,6 +1247,7 @@ export function emitHyperframes(
   const compositionId = options.compositionId ?? 'openmaic';
   const gsapVendorPath = options.gsapVendorPath ?? DEFAULT_GSAP_PATH;
   const manifestPath = options.manifestPath ?? DEFAULT_MANIFEST;
+  const productName = options.productName?.trim() ?? '';
   const labels: VideoExportLabels = {
     ...DEFAULT_VIDEO_EXPORT_LABELS,
     ...options.labels,
@@ -1309,7 +1321,7 @@ export function emitHyperframes(
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>${escapeHtml(ir.stage.name)} — OpenMAIC video</title>
+<title>${escapeHtml(ir.stage.name)} —${productName ? ` ${escapeHtml(productName)}` : ''} video</title>
 <style>
   ${INTER_FONT_FACE_CSS}${
     hasQuizQuestionList
@@ -1380,6 +1392,7 @@ window.__openmaicInteractiveReady.then(function () {
         gsapVendorPath,
         manifestPath,
         stageName: ir.stage.name,
+        productName,
         locale,
         burnInSubtitles: options.burnInSubtitles === true,
         labels,

@@ -9,7 +9,7 @@ import {
   readdirSync,
 } from 'node:fs';
 import { dirname, join } from 'node:path';
-import type { Locale } from '@/lib/i18n';
+import type { ContentLocale } from '@/lib/i18n';
 import type { Scene } from '@/lib/types/stage';
 import { compileVideoTimeline, emitHyperframes } from '@/lib/video-export';
 import type { CompilerScene } from '@/lib/video-export';
@@ -208,12 +208,12 @@ interface MaterializedSample {
   scenes: CompilerScene[];
   width?: number;
   height?: number;
-  locale?: Locale;
+  locale?: ContentLocale;
   marker: string;
   quizQuestionList?: boolean;
 }
 
-const DEFAULT_SAMPLE_LOCALE: Locale = 'en-US';
+const DEFAULT_SAMPLE_LOCALE: ContentLocale = 'en-US';
 const DEFAULT_SAMPLE_CTA = resolveVideoExportCta(undefined);
 
 function effectiveSampleOptions(sample: MaterializedSample) {

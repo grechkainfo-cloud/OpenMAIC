@@ -24,6 +24,8 @@ import {
   fetchSceneActions,
   fetchSceneContent,
   generateTTSForScene,
+  getApiHeaders,
+  withThinkingConfig,
 } from '@/lib/hooks/use-scene-generator';
 import { isAbortError } from '@openmaic/generation';
 import { FOREGROUND_SCENE_RETRY_OPTIONS } from './foreground-retry';
@@ -249,39 +251,6 @@ function GenerationPreviewContent() {
       clearOutlineReviewTimer();
     };
   }, []);
-
-  // Get API credentials from localStorage
-  const getApiHeaders = () => {
-    const modelConfig = getCurrentModelConfig();
-    const settings = useSettingsStore.getState();
-    const imageProviderConfig = settings.imageProvidersConfig?.[settings.imageProviderId];
-    const videoProviderConfig = settings.videoProvidersConfig?.[settings.videoProviderId];
-    return {
-      'Content-Type': 'application/json',
-      'x-model': modelConfig.modelString,
-      'x-api-key': modelConfig.apiKey,
-      'x-base-url': modelConfig.baseUrl,
-      'x-provider-type': modelConfig.providerType || '',
-      // Image generation provider
-      'x-image-provider': settings.imageProviderId || '',
-      'x-image-model': settings.imageModelId || '',
-      'x-image-api-key': imageProviderConfig?.apiKey || '',
-      'x-image-base-url': imageProviderConfig?.baseUrl || '',
-      // Video generation provider
-      'x-video-provider': settings.videoProviderId || '',
-      'x-video-model': settings.videoModelId || '',
-      'x-video-api-key': videoProviderConfig?.apiKey || '',
-      'x-video-base-url': videoProviderConfig?.baseUrl || '',
-      // Media generation toggles
-      'x-image-generation-enabled': String(settings.imageGenerationEnabled ?? false),
-      'x-video-generation-enabled': String(settings.videoGenerationEnabled ?? false),
-    };
-  };
-
-  const withThinkingConfig = <T extends Record<string, unknown>>(body: T) => {
-    const { thinkingConfig } = getCurrentModelConfig();
-    return thinkingConfig ? { ...body, thinkingConfig } : body;
-  };
 
   // Auto-start generation when session is loaded
   useEffect(() => {

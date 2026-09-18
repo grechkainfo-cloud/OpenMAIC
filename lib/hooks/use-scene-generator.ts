@@ -34,7 +34,7 @@ import { isServerBackedMediaPersistence } from '@/lib/persistence/media-persiste
 import { lazyBoundedMap } from '@/lib/utils/concurrency';
 import { createLogger } from '@/lib/logger';
 import { toast } from 'sonner';
-import { getClientTranslation } from '@/lib/i18n';
+import { currentLocale, getClientTranslation } from '@/lib/i18n';
 import {
   isVoiceBindingUnavailable,
   markVoiceBindingNoticeShown,
@@ -71,7 +71,16 @@ type ClientRetryOptions<T> = Partial<
   Omit<GenerationRetryOptions<T>, 'label' | 'shouldRetryResult' | 'signal'>
 >;
 
-function getApiHeaders(): HeadersInit {
+/**
+ * Headers every generation request carries: the model credentials the caller
+ * configured, the media-provider selection, and the interface language.
+ *
+ * Exported because `app/generation-preview` held a byte-identical copy of this
+ * list. Two copies of a header set drift the moment one gains a header the
+ * other does not — which is exactly what happened when `x-user-locale` was
+ * added and only one of them started sending it.
+ */
+export function getApiHeaders(): HeadersInit {
   const config = getCurrentModelConfig();
   const settings = useSettingsStore.getState();
   const imageProviderConfig = settings.imageProvidersConfig?.[settings.imageProviderId];
@@ -96,10 +105,14 @@ function getApiHeaders(): HeadersInit {
     // Media generation toggles
     'x-image-generation-enabled': String(settings.imageGenerationEnabled ?? false),
     'x-video-generation-enabled': String(settings.videoGenerationEnabled ?? false),
+    // Interface language. The course language defaults to it, so that a topic
+    // typed in one language does not decide what language the course is in.
+    // Same header the PBL routes already read.
+    'x-user-locale': currentLocale(),
   };
 }
 
-function withThinkingConfig<T extends Record<string, unknown>>(body: T): T {
+export function withThinkingConfig<T extends Record<string, unknown>>(body: T): T {
   const { thinkingConfig } = getCurrentModelConfig();
   return thinkingConfig ? ({ ...body, thinkingConfig } as T) : body;
 }

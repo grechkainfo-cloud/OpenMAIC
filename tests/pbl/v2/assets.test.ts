@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
 
+import { BRAND } from '@/lib/brand/brand-config';
+
 function expectPng(path: string) {
   const bytes = readFileSync(path);
 
@@ -13,7 +15,9 @@ describe('PBL v2 static assets', () => {
     expectPng('public/avatars/instructor.png');
   });
 
-  test('ships the OpenMAIC mark used in the workspace header', () => {
-    expectPng('public/openmaic-mark.png');
+  test('ships the brand mark used in the workspace header', () => {
+    // Path comes from the brand config so a rebrand that moves the asset
+    // moves this assertion with it.
+    expectPng(`public${BRAND.logo.mark}`);
   });
 });

@@ -48,6 +48,36 @@ export type { AssetRef, AssetRefKind } from './html-asset-inventory';
 
 const HTTP_URL = /^https?:\/\//i;
 
+/**
+ * The absolute URL to FETCH for an asset reference, or null when there is
+ * nothing to fetch.
+ *
+ * Generated scenes reference the app's own vendored assets by root-relative
+ * path — `/vendor/katex/katex.min.js` is the one that matters, because without
+ * it every formula in an exported scene renders as raw `$...$`. Gating on
+ * "starts with http" skipped those silently: the fetcher was never called, no
+ * failure was reported, and the exported HTML kept a path that resolves to
+ * nothing outside the app.
+ *
+ * A relative URL cannot leave its base's origin, so resolving one adds no
+ * reach the export did not already have. With no base (a non-browser caller)
+ * the behaviour is exactly what it was: absolute URLs only.
+ */
+function fetchableUrl(raw: string, base: string | undefined): string | null {
+  const value = raw.trim();
+  if (!value || value.startsWith('#')) return null;
+  if (HTTP_URL.test(value)) return value;
+  // data:, blob:, about:, javascript: — already inline, or not an asset.
+  if (/^[a-z][a-z0-9+.-]*:/i.test(value)) return null;
+  if (!base) return null;
+  try {
+    const resolved = new URL(value, base);
+    return HTTP_URL.test(resolved.href) ? resolved.href : null;
+  } catch {
+    return null;
+  }
+}
+
 interface CssImportConditions {
   layer?: string | null;
   supports?: string;
@@ -548,6 +578,10 @@ export async function inlineHtmlAssets(
   options?: InlineOptions,
 ): Promise<{ html: string; report: InlineReport; unresolved: string[] }> {
   const fetchAsset = options?.fetcher ?? createAssetFetcher(options);
+  // Root-relative references (`/vendor/katex/katex.min.js`) resolve against the
+  // document that is doing the exporting — which is the app that serves them.
+  const baseUrl =
+    options?.baseUrl ?? (typeof document !== 'undefined' ? document.baseURI : undefined);
   const report: InlineReport = { inlined: [], failed: [] };
   const unsupported = unsupportedImportmapFeatures(html);
   if (unsupported.length > 0) return { html, report, unresolved: unsupported };
@@ -585,11 +619,13 @@ export async function inlineHtmlAssets(
   const inlineAttributes = async (kinds: ReadonlySet<AssetRefKind>) => {
     const patches: SourcePatch[] = [];
     for (const asset of analyzeHtmlAssetInventory(out).attributeAssets) {
-      if (!kinds.has(asset.kind) || !HTTP_URL.test(asset.url)) continue;
+      if (!kinds.has(asset.kind)) continue;
       const isSvgReference = asset.kind === 'svg-image' || asset.kind === 'svg-use';
       const hashIndex = isSvgReference ? asset.url.indexOf('#') : -1;
-      const fetchUrl = hashIndex === -1 ? asset.url : asset.url.slice(0, hashIndex);
+      const rawUrl = hashIndex === -1 ? asset.url : asset.url.slice(0, hashIndex);
       const fragment = hashIndex === -1 ? '' : asset.url.slice(hashIndex);
+      const fetchUrl = fetchableUrl(rawUrl, baseUrl);
+      if (!fetchUrl) continue;
       const got = await fetchAsset(fetchUrl);
       if (!got) {
         markFailed(fetchUrl, 'fetch failed');
@@ -612,15 +648,16 @@ export async function inlineHtmlAssets(
     for (const asset of analyzeHtmlAssetInventory(out).attributeAssets) {
       if (
         asset.kind !== 'link' ||
-        !HTTP_URL.test(asset.url) ||
         !asset.attributes.rel?.toLowerCase().split(/\s+/).includes('stylesheet') ||
         !asset.elementRange
       ) {
         continue;
       }
-      const got = await fetchAsset(asset.url);
+      const cssUrl = fetchableUrl(asset.url, baseUrl);
+      if (!cssUrl) continue;
+      const got = await fetchAsset(cssUrl);
       if (!got) {
-        markFailed(asset.url, 'fetch failed');
+        markFailed(cssUrl, 'fetch failed');
         continue;
       }
       let cssText = new TextDecoder().decode(got.bytes);
@@ -628,14 +665,14 @@ export async function inlineHtmlAssets(
         css: rewritten,
         failed: cssFailed,
         inlined: cssInlined,
-      } = await inlineCssUrls(cssText, asset.url, fetchAsset);
+      } = await inlineCssUrls(cssText, cssUrl, fetchAsset);
       cssText = rewritten;
       for (const f of cssFailed) markFailed(f.url, f.reason);
       for (const inlined of cssInlined) markInlined(inlined);
       const mediaAttr = asset.attributes.media
         ? ` media="${asset.attributes.media.replace(/"/g, '&quot;')}"`
         : '';
-      markInlined(asset.url);
+      markInlined(cssUrl);
       patches.push({
         range: asset.elementRange,
         replacement: `<style data-inlined-from=""${mediaAttr}>${cssText}</style>`,
@@ -648,23 +685,25 @@ export async function inlineHtmlAssets(
   {
     const patches: SourcePatch[] = [];
     for (const asset of analyzeHtmlAssetInventory(out).attributeAssets) {
-      if (asset.kind !== 'script' || !HTTP_URL.test(asset.url)) continue;
-      const got = await fetchAsset(asset.url);
+      if (asset.kind !== 'script') continue;
+      const scriptUrl = fetchableUrl(asset.url, baseUrl);
+      if (!scriptUrl) continue;
+      const got = await fetchAsset(scriptUrl);
       if (!got) {
-        markFailed(asset.url, 'fetch failed');
+        markFailed(scriptUrl, 'fetch failed');
         continue;
       }
       const type = asset.attributes.type?.trim().toLowerCase() === 'module';
       const source = new TextDecoder().decode(got.bytes);
       const rewritten = type
-        ? await inlineModuleSource(source, asset.url, readImportmapImports(out), fetchAsset, report)
+        ? await inlineModuleSource(source, scriptUrl, readImportmapImports(out), fetchAsset, report)
         : source;
       const patch = replaceAttributePatch(
         asset,
         toDataUri(new TextEncoder().encode(rewritten), got.contentType),
       );
       if (patch) patches.push(patch);
-      markInlined(asset.url);
+      markInlined(scriptUrl);
     }
     out = applySourcePatches(out, patches);
   }
@@ -697,13 +736,14 @@ export async function inlineHtmlAssets(
       if (asset.kind !== 'srcset') continue;
       const rewritten = await Promise.all(
         parseSrcset(asset.url).map(async (candidate) => {
-          if (!HTTP_URL.test(candidate.url)) return candidate;
-          const got = await fetchAsset(candidate.url);
+          const candidateUrl = fetchableUrl(candidate.url, baseUrl);
+          if (!candidateUrl) return candidate;
+          const got = await fetchAsset(candidateUrl);
           if (!got) {
-            markFailed(candidate.url, 'fetch failed');
+            markFailed(candidateUrl, 'fetch failed');
             return candidate;
           }
-          markInlined(candidate.url);
+          markInlined(candidateUrl);
           return { ...candidate, url: toDataUri(got.bytes, got.contentType) };
         }),
       );

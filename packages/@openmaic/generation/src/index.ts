@@ -30,7 +30,11 @@ export {
 } from './generation-retry.js';
 export type { GenerationRetryEvent, GenerationRetryOptions } from './generation-retry.js';
 export { parseActionsFromStructuredOutput } from './action-parser.js';
-export { postProcessInteractiveHtml } from './interactive-post-processor.js';
+export {
+  postProcessInteractiveHtml,
+  DEFAULT_KATEX_BASE,
+  type InteractiveHtmlOptions,
+} from './interactive-post-processor.js';
 export { generatePBLV2ProjectSingleCall } from './pbl/planner-single-call.js';
 export type { PlannerSingleCallFn } from './pbl/planner-single-call.js';
 export type { PBLPlannerV2Input, PriorQuizResult } from './pbl/types.js';
@@ -74,6 +78,9 @@ export type {
 
 export {
   DEFAULT_LANGUAGE_DIRECTIVE,
+  defaultLanguageDirectiveFor,
+  buildLanguageContext,
+  languageDisplayName,
   applyOutlineFallbacks,
   buildOutlinePrompt,
   generateSceneOutlinesFromRequirements,

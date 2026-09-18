@@ -29,12 +29,26 @@ describe('PBL v2 route locale sync', () => {
   it('uses x-user-locale as the authoritative route-time language', () => {
     const p = project('en-US');
     const req = new NextRequest('http://localhost/api/pbl/v2/open-task', {
+      headers: { 'x-user-locale': 'ru-RU' },
+    });
+
+    applyRequestLocaleToProject(req, p);
+
+    expect(p.language).toBe('ru-RU');
+  });
+
+  it('ignores a locale the interface does not ship', () => {
+    // This header carries the UI language, so it is bounded by the interface
+    // locale registry. A course authored in Chinese still says so through
+    // `languageDirective`, which this function deliberately never touches.
+    const p = project('en-US');
+    const req = new NextRequest('http://localhost/api/pbl/v2/open-task', {
       headers: { 'x-user-locale': 'zh-CN' },
     });
 
     applyRequestLocaleToProject(req, p);
 
-    expect(p.language).toBe('zh-CN');
+    expect(p.language).toBe('en-US');
   });
 
   it('ignores unsupported locale headers', () => {

@@ -33,6 +33,11 @@ export async function POST(req: NextRequest) {
         : {}),
       ...(rawBody.enableTTS != null ? { enableTTS: rawBody.enableTTS } : {}),
       ...(rawBody.agentMode ? { agentMode: rawBody.agentMode } : {}),
+      // Header, not body: the same `x-user-locale` the PBL and outline routes
+      // already read, so one convention carries the interface language.
+      ...(req.headers.get('x-user-locale')?.trim()
+        ? { interfaceLanguage: req.headers.get('x-user-locale')!.trim() }
+        : {}),
     };
     const { requirement } = body;
 

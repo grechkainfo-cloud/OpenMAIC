@@ -79,6 +79,7 @@ import {
   taskEvaluationCanComplete,
 } from '@/lib/pbl/v2/operations/kernel/task-completion';
 import { useI18n } from '@/lib/hooks/use-i18n';
+import { formatDate, formatDateTime } from '@/lib/i18n/format';
 import i18n from '@/lib/i18n/config';
 import {
   assertNotStreamError,
@@ -299,7 +300,7 @@ export function PBLV2SubmissionPanel({
   onInstructorStreamingChange,
   instructorStreaming,
 }: Props) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const current = useMemo(() => {
     const ms = project.milestones.find((m) => m.status === 'active');
     if (!ms) return undefined;
@@ -753,7 +754,7 @@ function SubmissionHistory({
   readonly onView: (s: PBLSubmission) => void;
   readonly onDownload: (s: PBLSubmission) => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   return (
     <div className="rounded-xl border border-cyan-100/[0.12] bg-slate-800/[0.38] p-3">
       <div className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">
@@ -799,9 +800,7 @@ function SubmissionHistory({
                       {t('pbl.v2.submission.fromTask', { title: taskTitle })}
                     </span>
                   )}
-                  <span className="ml-auto shrink-0">
-                    {new Date(s.createdAt).toLocaleDateString()}
-                  </span>
+                  <span className="ml-auto shrink-0">{formatDate(s.createdAt, locale)}</span>
                 </div>
               </button>
             </li>
@@ -821,7 +820,7 @@ function SubmissionViewer({
   readonly onClose: () => void;
   readonly onDownload: (s: PBLSubmission) => void;
 }) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -921,7 +920,7 @@ function SubmissionModal({
   onClose,
   onSubmit,
 }: SubmissionModalProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   // Whether the currently-selected model can read images. Reactive so that
   // switching models (in Settings) updates the image-caption gating live.
   const hasVision = useSettingsStore((s) => {
@@ -1345,7 +1344,7 @@ function SubmissionModal({
                           </>
                         )}
                         <span className="text-[10px] text-muted-foreground ml-auto shrink-0">
-                          {new Date(s.createdAt).toLocaleString()}
+                          {formatDateTime(s.createdAt, locale)}
                         </span>
                       </div>
                       {trimmedPBLText(s.content) && (

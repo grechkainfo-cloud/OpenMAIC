@@ -93,7 +93,9 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/hooks/use-i18n';
-import { useBrand } from '@/lib/brand/brand-context';
+import { useBrandLogo } from '@/lib/brand/use-brand-logo';
+import { formatDate, formatRelativeTime } from '@/lib/i18n/format';
+import { isSameName } from '@/lib/i18n/text';
 import type { HomeDiscoveryState, useHomeDiscovery } from '@/lib/hooks/use-home-discovery';
 import { ProBadge } from '@/components/workbench/ProBadge';
 import { LanguageSwitcher } from '@/components/language-switcher';
@@ -230,8 +232,8 @@ export function WorkspaceRail({
   /** The width drag, owned by the shell (it writes the CSS variable on the root). */
   readonly resizeHandle: ReactNode;
 }) {
-  const { t } = useI18n();
-  const brand = useBrand();
+  const { t, locale } = useI18n();
+  const brandLogo = useBrandLogo('horizontal');
   const foldersAvailable = workspaceFoldersAvailable();
 
   const coursesSection = useListSearch();
@@ -283,9 +285,7 @@ export function WorkspaceRail({
       // Unchanged is not a rename; leave editing without writing anything.
       if (courses.folders.find((folder) => folder.id === folderId)?.name === trimmed) return null;
       if (
-        courses.folders.some(
-          (folder) => folder.id !== folderId && folder.name.toLowerCase() === trimmed.toLowerCase(),
-        )
+        courses.folders.some((folder) => folder.id !== folderId && isSameName(folder.name, trimmed))
       ) {
         return t('classroom.folderNameExists');
       }
@@ -814,7 +814,7 @@ export function WorkspaceRail({
             delta,
           )
         }
-        meta={relativeLabel(session.updatedAt || session.createdAt, t)}
+        meta={relativeLabel(session.updatedAt || session.createdAt, t, locale)}
         trailingMark={<SessionDot status={session.status} />}
         statusLabel={t(`workspace.sessionStatus.${session.status}`)}
         onClick={() => onOpenSession(session.id)}
@@ -846,7 +846,7 @@ export function WorkspaceRail({
             never one control wearing both meanings. */}
         <HomeLink testId="pro-nav-home" onGoHome={onGoHome} className="-ml-1.5 px-1.5 py-1">
           <img
-            src={brand.logoSrc}
+            src={brandLogo.src}
             alt=""
             aria-hidden="true"
             className="h-[21px] w-auto max-w-[110px] shrink-0"
@@ -1476,7 +1476,7 @@ function InlineNewFolderRow({
     }
 
     const trimmed = name.trim();
-    if (folders.some((folder) => folder.name.toLowerCase() === trimmed.toLowerCase())) {
+    if (folders.some((folder) => isSameName(folder.name, trimmed))) {
       setError(t('classroom.folderNameExists'));
       return;
     }
@@ -2280,19 +2280,22 @@ function writeStoredOrder(key: string, order: readonly string[]): void {
 function relativeLabel(
   timestamp: number,
   t: (key: string, options?: Record<string, unknown>) => string,
+  locale: string,
 ): string | null {
   const bucket = relativeBucket(timestamp, Date.now());
   if (!bucket) return null;
   switch (bucket.unit) {
     case 'now':
       return t('workspace.time.justNow');
+    // `Intl.RelativeTimeFormat` declines the unit per language, so these three
+    // no longer need a translated string with a hand-glued number in front.
     case 'minutes':
-      return t('workspace.time.minutesAgo', { count: bucket.count });
+      return formatRelativeTime(bucket.count, 'minute', locale);
     case 'hours':
-      return t('workspace.time.hoursAgo', { count: bucket.count });
+      return formatRelativeTime(bucket.count, 'hour', locale);
     case 'days':
-      return t('workspace.time.daysAgo', { count: bucket.count });
+      return formatRelativeTime(bucket.count, 'day', locale);
     case 'date':
-      return new Date(bucket.at).toLocaleDateString();
+      return formatDate(bucket.at, locale);
   }
 }

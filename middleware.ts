@@ -46,5 +46,8 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|logos/).*)'],
+  // `brand/` joins the exclusions for the same reason as `logos/`: the
+  // access-code screen renders the product lockup before anyone is let in, so
+  // gating the brand assets would show a broken image on the gate itself.
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|logos/|brand/).*)'],
 };

@@ -5,6 +5,7 @@ import { animate, motion, MotionConfig, useReducedMotion } from 'motion/react';
 import { FileText, HelpCircle, Gamepad2, Puzzle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/lib/hooks/use-i18n';
+import { formatDate } from '@/lib/i18n/format';
 import { useStageStore } from '@/lib/store';
 import type { Scene, SceneType } from '@/lib/types/stage';
 import {
@@ -350,13 +351,10 @@ export function ClassroomCompletePage({ scenes, title }: ClassroomCompletePagePr
     };
   }, [scenes]);
 
-  const dateLabel = useMemo(() => {
-    try {
-      return new Intl.DateTimeFormat(locale).format(new Date());
-    } catch {
-      return new Date().toLocaleDateString();
-    }
-  }, [locale]);
+  // Pinned at mount rather than read during render: the completion screen shows
+  // the day the learner finished, and a clock read in render is impure.
+  const [completedAt] = useState(() => Date.now());
+  const dateLabel = useMemo(() => formatDate(completedAt, locale), [completedAt, locale]);
 
   const trailItems = TYPE_ORDER.filter((type) => (summary.countsByType[type] ?? 0) > 0).map(
     (type) => ({

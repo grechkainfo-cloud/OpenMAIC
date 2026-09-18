@@ -1,19 +1,8 @@
 import { readdirSync, readFileSync, statSync } from 'fs';
+import { localeResourceMap, resolveLocaleKey } from './locale-resources';
 import { join } from 'path';
 import { describe, expect, it } from 'vitest';
 import { workbenchResourceFor } from '@/lib/i18n/workbench';
-import arSA from '@/lib/i18n/locales/ar-SA.json';
-import deDE from '@/lib/i18n/locales/de-DE.json';
-import enUS from '@/lib/i18n/locales/en-US.json';
-import esMX from '@/lib/i18n/locales/es-MX.json';
-import frFR from '@/lib/i18n/locales/fr-FR.json';
-import jaJP from '@/lib/i18n/locales/ja-JP.json';
-import koKR from '@/lib/i18n/locales/ko-KR.json';
-import ptBR from '@/lib/i18n/locales/pt-BR.json';
-import ruRU from '@/lib/i18n/locales/ru-RU.json';
-import viVN from '@/lib/i18n/locales/vi-VN.json';
-import zhCN from '@/lib/i18n/locales/zh-CN.json';
-import zhTW from '@/lib/i18n/locales/zh-TW.json';
 
 /**
  * Guard for the editor-chrome locale contract.
@@ -52,20 +41,7 @@ const SCENE_TYPE_VALUES = ['slide', 'quiz', 'interactive', 'pbl'] as const;
  */
 const FONT_LABEL_KEYS = ['edit.text.fontDefault'] as const;
 
-const LOCALE_RESOURCES: Record<string, unknown> = {
-  'ar-SA': arSA,
-  'de-DE': deDE,
-  'en-US': enUS,
-  'es-MX': esMX,
-  'fr-FR': frFR,
-  'ja-JP': jaJP,
-  'ko-KR': koKR,
-  'pt-BR': ptBR,
-  'ru-RU': ruRU,
-  'vi-VN': viVN,
-  'zh-CN': zhCN,
-  'zh-TW': zhTW,
-};
+const LOCALE_RESOURCES: Record<string, unknown> = localeResourceMap;
 
 const LOCALES = Object.keys(LOCALE_RESOURCES);
 
@@ -193,7 +169,10 @@ describe('editor chrome i18n keys', () => {
   it.each(LOCALES)('resolves every extracted key in %s', (locale) => {
     const resource = mergedResource(locale);
     const unresolved = keys.filter((key) => {
-      const value = readPath(resource, key.split('.'));
+      // `resolveLocaleKey` follows plural suffixes: a counted key has no bare
+      // entry, only `key_one` / `key_few` / …, so reading the bare path alone
+      // would report a correctly pluralized key as unresolved.
+      const value = resolveLocaleKey(resource, key);
       return typeof value !== 'string' || value.length === 0;
     });
     expect(unresolved, `unresolved keys in ${locale}`).toEqual([]);

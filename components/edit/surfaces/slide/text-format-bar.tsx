@@ -12,7 +12,7 @@ import {
   Minus,
   Plus,
 } from 'lucide-react';
-import { FONTS } from '@/configs/font';
+import { FONTS, fontsForScript, scriptForLocale } from '@/configs/font';
 import type { TextAttrs } from '@/lib/prosemirror/utils';
 import {
   runActiveTextCommand,
@@ -107,7 +107,7 @@ const STEP_BUTTON =
   'dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-zinc-100';
 
 export function TextFormatBar({ elementId, attrs }: TextFormatBarProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const run = useCallback(
     (payload: TextCommandPayload) => runActiveTextCommand(elementId, payload),
     [elementId],
@@ -155,7 +155,11 @@ export function TextFormatBar({ elementId, attrs }: TextFormatBarProps) {
           <SelectValue>{currentFontLabel(attrs.fontname, t)}</SelectValue>
         </SelectTrigger>
         <SelectContent position="popper" className="max-h-72">
-          {FONTS.map((f) => (
+          {/* Scoped to the writing system the interface language is written
+              in: a face with no Cyrillic offered to a Russian author renders
+              tofu or silently falls back to a system font, which reads as a
+              broken picker rather than as a font without Cyrillic. */}
+          {fontsForScript(scriptForLocale(locale)).map((f) => (
             <SelectItem key={f.value} value={f.value || DEFAULT_FONT} className="text-xs">
               {f.labelKey ? t(f.labelKey) : f.label}
             </SelectItem>

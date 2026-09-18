@@ -7,6 +7,7 @@ import type { Action } from '@/lib/types/action';
 import type { QuizContent, Scene, SlideContent } from '@/lib/types/stage';
 import type { WidgetConfig } from '@/lib/types/widgets';
 import type { PPTElement } from '@openmaic/dsl';
+import { BRAND } from '@/lib/brand/brand-config';
 import {
   containsReadSceneMediaPlaceholder,
   containsReadScenePlaceholderFragment,
@@ -513,7 +514,7 @@ export function emptySlideContent(): SlideContent {
         backgroundColor: '#ffffff',
         themeColors: ['#2563eb'],
         fontColor: '#111827',
-        fontName: 'Inter',
+        fontName: BRAND.fonts.slideDefault,
       },
       elements: [],
     },

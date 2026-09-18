@@ -5,11 +5,11 @@ import {
 } from '@/components/workbench/chat/thinking-bar-state';
 
 describe('thinkingBarSummary', () => {
-  it('says 思考中 while streaming and 已思考 once settled', () => {
-    expect(thinkingBarSummary({ streaming: true })).toBe('思考中…');
-    expect(thinkingBarSummary({ streaming: true, duration: '1.2s' })).toBe('思考中…');
-    expect(thinkingBarSummary({ streaming: false, duration: '3.2s' })).toBe('已思考 3.2s');
-    expect(thinkingBarSummary({ streaming: false })).toBe('已思考');
+  it('says it is thinking while streaming and that it thought once settled', () => {
+    expect(thinkingBarSummary({ streaming: true })).toBe('Думает…');
+    expect(thinkingBarSummary({ streaming: true, duration: '1.2s' })).toBe('Думает…');
+    expect(thinkingBarSummary({ streaming: false, duration: '3.2s' })).toBe('Думал 3.2s');
+    expect(thinkingBarSummary({ streaming: false })).toBe('Подумал');
   });
 });
 

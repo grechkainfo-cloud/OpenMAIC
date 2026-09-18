@@ -148,14 +148,14 @@ describe('system notice markup', () => {
     const html = render([failure('e1'), failure('e2'), failure('e3')]);
     expect(html.split('本轮生成失败').length - 1).toBe(1);
     expect(html).toContain(repeatLabel(3));
-    expect(html).toContain('相同提示连续出现 3 次');
+    expect(html).toContain('Одно и то же сообщение подряд 3 раз');
   });
 
   it('keeps the raw provider error out of the transcript until it is asked for', () => {
     const html = render([failure('e1', 'MODEL_ROUTES must explicitly configure stage')]);
     expect(html).not.toContain('MODEL_ROUTES');
     // …and offers the disclosure that holds it.
-    expect(html).toContain('技术详情');
+    expect(html).toContain('Технические детали');
     expect(html).toContain('可以再说一句让它重试');
   });
 
@@ -163,7 +163,7 @@ describe('system notice markup', () => {
     expect(render([failure('e1')])).toContain('data-tone="error"');
     const info = render([{ key: 'i', kind: 'system', tone: 'info', text: '已从中断处继续生成' }]);
     expect(info).toContain('data-tone="info"');
-    expect(info).not.toContain('技术详情');
+    expect(info).not.toContain('Технические детали');
   });
 
   it('renders the stop caption as a caption, not as a notice card', () => {

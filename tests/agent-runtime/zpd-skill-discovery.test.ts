@@ -23,10 +23,11 @@ describe('exercise lesson skill discovery', () => {
 
   it.each(supportedLocales)('has explicit workbench display copy for $code', ({ code }) => {
     const handle = 'zone-of-proximal-development';
-    // Inspect overlay files themselves: merged resources could silently fall
-    // back to English (or Simplified Chinese) when a translation is missing.
+    // Inspect the overlay file itself: a merged resource could silently fall
+    // back to English when a translation is missing, which is exactly what this
+    // test exists to catch. English is the base and has no overlay of its own.
     const resource =
-      code === 'en-US' || code === 'zh-CN'
+      code === 'en-US'
         ? workbenchResourceFor(code)
         : JSON.parse(
             readFileSync(join(process.cwd(), 'lib/i18n/workbench-locales', `${code}.json`), 'utf8'),
@@ -38,7 +39,6 @@ describe('exercise lesson skill discovery', () => {
     expect(skillTitle({ name: handle, source: 'builtin' }, createWorkbenchTranslator(code))).toBe(
       localized,
     );
-    if (code === 'zh-CN') expect(localized).toBe('习题课（最近发展区）');
     if (code === 'en-US') expect(localized).toBe('Practice lesson (zone of proximal development)');
   });
 });

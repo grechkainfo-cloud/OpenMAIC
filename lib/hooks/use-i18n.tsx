@@ -45,6 +45,14 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // `app/layout.tsx` renders `<html lang="en">` because the locale is only
+  // known after hydration. Leaving it there tells a screen reader to read
+  // Russian with English phonetics and gives the browser the wrong hyphenation
+  // dictionary, so keep the attribute in step with the active language.
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
+
   const setLocale = (newLocale: Locale) => {
     i18n.changeLanguage(newLocale);
     try {

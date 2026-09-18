@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+import { buildLanguageContext } from '@openmaic/generation';
 
 import { buildPrompt, PROMPT_IDS } from '@/lib/prompts';
 
@@ -9,6 +10,7 @@ function buildTaskEnginePrompt() {
     availableImages: 'No images available',
     researchContext: 'None',
     teacherContext: '',
+    languageContext: buildLanguageContext(),
     userProfile: '',
   });
   expect(prompt).not.toBeNull();

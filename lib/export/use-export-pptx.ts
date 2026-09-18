@@ -26,6 +26,7 @@ import { type SvgPoints, toPoints, getSvgPathRange } from '@/lib/export/svg-path
 import { svg2Base64 } from '@/lib/export/svg2base64';
 import { latexToOmml } from '@/lib/export/latex-to-omml';
 import { createLogger } from '@/lib/logger';
+import { BRAND } from '@/lib/brand/brand-config';
 import { inlineHtmlAssets, createAssetFetcher } from './inline-assets';
 import type { FetchAsset } from './inline-assets';
 import { createProxiedFetch } from './proxied-fetch';
@@ -43,7 +44,15 @@ import { lookupMediaTask, resolveVideoMediaForElement } from '@/lib/media/media-
 const log = createLogger('ExportPPTX');
 
 const DEFAULT_FONT_SIZE = 16;
-const DEFAULT_FONT_FAMILY = 'Microsoft YaHei';
+/**
+ * Font written into the deck for text that names none of its own.
+ *
+ * pptxgenjs does not embed fonts, so this only ever resolves to whatever is
+ * installed on the machine opening the file — which is why it is brand config
+ * and not a literal: a deployment picks a family its workstations actually
+ * have, with the script coverage its content needs.
+ */
+const DEFAULT_FONT_FAMILY = BRAND.fonts.pptxExport;
 
 // ── Color formatting ──
 

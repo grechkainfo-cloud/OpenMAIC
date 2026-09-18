@@ -29,6 +29,11 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useI18n } from '@/lib/hooks/use-i18n';
+import { formatDate as formatDateAt, formatRelativeTime } from '@/lib/i18n/format';
+import { matchesSearch } from '@/lib/i18n/text';
+import { useBrand } from '@/lib/brand/brand-context';
+import { useBrandLogo } from '@/lib/brand/use-brand-logo';
+import { useBrandTagline } from '@/lib/brand/use-brand-tagline';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { createLogger } from '@/lib/logger';
 import { Button } from '@/components/ui/button';
@@ -127,8 +132,11 @@ const initialFormState: FormState = {
 };
 
 function HomePage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { theme, setTheme } = useTheme();
+  const brand = useBrand();
+  const brandLogo = useBrandLogo('horizontal');
+  const tagline = useBrandTagline();
   const router = useRouter();
   // Do not replay the classic hero's entrance after the route handoff already
   // carried the lockup and composer into place.
@@ -453,13 +461,11 @@ function HomePage() {
 
   const deferredSearchQuery = useDeferredValue(searchQuery);
   const filteredClassrooms = useMemo(() => {
-    const q = deferredSearchQuery.trim().toLowerCase();
+    const q = deferredSearchQuery.trim();
     if (!q) return classrooms;
-    return classrooms.filter((c) => {
-      const name = c.name?.toLowerCase() ?? '';
-      const desc = c.description?.toLowerCase() ?? '';
-      return name.includes(q) || desc.includes(q);
-    });
+    // `matchesSearch` folds case, ё/е and spacing, so typing "ежик" finds
+    // a course the model titled «Ёжик».
+    return classrooms.filter((c) => matchesSearch(c.name, q) || matchesSearch(c.description, q));
   }, [classrooms, deferredSearchQuery]);
 
   // Folder-aware view model. Searching collapses the hierarchy: every matching
@@ -683,14 +689,14 @@ function HomePage() {
 
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp);
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const diffDays = Math.floor(Math.abs(Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
 
     if (diffDays === 0) return t('classroom.today');
     if (diffDays === 1) return t('classroom.yesterday');
-    if (diffDays < 7) return `${diffDays} ${t('classroom.daysAgo')}`;
-    return date.toLocaleDateString();
+    // `Intl` declines the unit; the old `${n} ${t('daysAgo')}` could only ever
+    // produce one form and read as "3 день назад".
+    if (diffDays < 7) return formatRelativeTime(diffDays, 'day', locale);
+    return formatDateAt(date, locale);
   };
 
   const canGenerate = !!form.requirement.trim() && hasUsableProvider;
@@ -796,6 +802,9 @@ function HomePage() {
         <div className="relative">
           <button
             onClick={() => setSettingsOpen(true)}
+            // Icon-only, so it had no accessible name at all: a screen reader
+            // announced "button" and nothing else.
+            aria-label={t('settings.title')}
             className="p-2 rounded-full text-gray-400 dark:text-gray-500 hover:bg-white dark:hover:bg-gray-700 hover:text-gray-800 dark:hover:text-gray-200 hover:shadow-sm transition-all group"
           >
             <Settings className="w-4 h-4 group-hover:rotate-90 transition-transform duration-500" />
@@ -833,8 +842,9 @@ function HomePage() {
         {/* ── Logo ── */}
         <div className="relative" data-pro-morph="lockup">
           <motion.img
-            src="/logo-horizontal.png"
-            alt="OpenMAIC"
+            src={brandLogo.src}
+            alt={brandLogo.alt}
+            data-testid="brand-logo"
             initial={heroEnter({ opacity: 0, scale: 0.9 })}
             animate={{ opacity: 1, scale: 1 }}
             transition={{
@@ -862,7 +872,7 @@ function HomePage() {
           transition={{ delay: 0.25 }}
           className="text-sm text-muted-foreground/60 mb-8"
         >
-          {t('home.slogan')}
+          {tagline}
         </motion.p>
 
         {/* ── Unified input area ── */}
@@ -1344,10 +1354,14 @@ function HomePage() {
         onCreate={handleCreateFolder}
       />
 
-      {/* Footer — flows with content, at the very end */}
-      <div className="mt-auto pt-12 pb-4 text-center text-xs text-muted-foreground/40">
-        OpenMAIC Open Source Project
-      </div>
+      {/* Footer — flows with content, at the very end. An empty legalFooter
+          means the brand does not want an ownership line, so render nothing
+          rather than an empty band that still takes vertical space. */}
+      {brand.legalFooter ? (
+        <div className="mt-auto pt-12 pb-4 text-center text-xs text-muted-foreground/40">
+          {brand.legalFooter}
+        </div>
+      ) : null}
     </div>
   );
 }

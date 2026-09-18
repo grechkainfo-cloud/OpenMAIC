@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
 import './globals.css';
@@ -12,6 +12,7 @@ import { ServerProvidersInit } from '@/components/server-providers-init';
 import { StorageHealthNotice } from '@/components/storage-health-notice';
 import { AccessCodeGuard } from '@/components/access-code-guard';
 import { ProSwapWatcher } from '@/components/workbench/ProSwapWatcher';
+import { brandMetadata, brandViewport } from '@/lib/brand/brand-server';
 
 // The UI font is loaded from @fontsource's stylesheet rather than next/font,
 // because only the stylesheet carries the per-subset `unicode-range`
@@ -24,15 +25,14 @@ import { ProSwapWatcher } from '@/components/workbench/ProSwapWatcher';
 // fix it either: faces with identical descriptors and no `unicode-range` do not
 // fall through per glyph, so the browser simply picks one.
 //
-// `--font-sans` moves to globals.css since the family no longer comes from
-// next/font's generated class.
+// `--font-sans` is declared in app/brand-tokens.css (generated from
+// BRAND.fonts.ui) since the family no longer comes from next/font's generated
+// class. Changing the UI font means editing the brand config, not this import
+// — except for the @fontsource package name below, which is a real dependency.
 import '@fontsource-variable/inter';
 
-export const metadata: Metadata = {
-  title: 'OpenMAIC',
-  description:
-    'The open-source AI interactive classroom. Upload a PDF to instantly generate an immersive, multi-agent learning experience.',
-};
+export const metadata: Metadata = brandMetadata();
+export const viewport: Viewport = brandViewport();
 
 export default function RootLayout({
   children,

@@ -106,7 +106,7 @@ describe('lifecycle events', () => {
     expect(state.status).toBe('running');
     const sys = contentOf(state)[1];
     expect(sys).toMatchObject({ kind: 'system', tone: 'info' });
-    expect(sys.text).toContain('中断');
+    expect(sys.text).toContain('прерыв');
   });
 
   it('session_interrupted keeps status running and notes the pause', () => {
@@ -131,8 +131,8 @@ describe('lifecycle events', () => {
     expect(end).toMatchObject({ kind: 'system', tone: 'error' });
     // Summary, next step and raw cause are three fields: the provider's own
     // error text never joins the sentence.
-    expect(end.text).toBe('本轮生成失败');
-    expect(end.hint).toBe('可以再说一句让它重试');
+    expect(end.text).toBe('Эта сборка завершилась ошибкой');
+    expect(end.hint).toBe('Отправьте ещё одно сообщение, чтобы повторить');
     expect(end.detail).toBe('provider 502');
     expect(end.text).not.toContain('provider 502');
   });
@@ -140,7 +140,11 @@ describe('lifecycle events', () => {
   it('a failure without a cause carries no technical detail', () => {
     const state = foldAll([ev('session_end', { status: 'failed' })]);
     const end = state.chat[state.chat.length - 1];
-    expect(end).toMatchObject({ kind: 'system', tone: 'error', text: '本轮生成失败' });
+    expect(end).toMatchObject({
+      kind: 'system',
+      tone: 'error',
+      text: 'Эта сборка завершилась ошибкой',
+    });
     expect(end.detail).toBeUndefined();
   });
 
@@ -153,7 +157,7 @@ describe('lifecycle events', () => {
   it('session_end cancelled is a quiet caption, not a ruled section', () => {
     const state = foldAll([ev('session_end', { status: 'cancelled' })]);
     expect(state.status).toBe('cancelled');
-    expect(state.chat[0]).toMatchObject({ kind: 'boundary', text: '本轮生成已停止' });
+    expect(state.chat[0]).toMatchObject({ kind: 'boundary', text: 'Эта сборка остановлена' });
   });
 
   it('a follow-up session_resumed restarts the run without a chat row', () => {
@@ -1522,7 +1526,7 @@ describe('session_resumed with repairedToolCalls', () => {
     ]);
     const dead = state.chat.find((n) => n.toolCallId === 'dead-scene');
     expect(dead).toMatchObject({ toolState: 'failed' });
-    expect(dead?.toolResultText).toContain('重启');
+    expect(dead?.toolResultText).toContain('перезапуском');
     expect(dead?.toolEndedAt).toBeDefined();
     // The dead generate_scene no longer owns the "writing page N" marker.
     expect(state.generatingOrder).toBeNull();
@@ -1591,14 +1595,17 @@ describe('session_end cancelled settles the tools left in flight', () => {
     for (const id of ['in-flight', 'also-open']) {
       const card = state.chat.find((n) => n.toolCallId === id);
       expect(card, id).toMatchObject({ kind: 'tool', toolState: 'failed' });
-      expect(card?.toolResultText).toContain('已被停止');
+      expect(card?.toolResultText).toContain('остановкой');
       expect(card?.toolEndedAt).toBeDefined();
     }
     // The cancelled generate_scene no longer owns the "writing page N" marker.
     expect(state.generatingOrder).toBeNull();
     // The caption still closes the run, and stays last.
     const rows = contentOf(state);
-    expect(rows[rows.length - 1]).toMatchObject({ kind: 'boundary', text: '本轮生成已停止' });
+    expect(rows[rows.length - 1]).toMatchObject({
+      kind: 'boundary',
+      text: 'Эта сборка остановлена',
+    });
     expect(state.status).toBe('cancelled');
   });
 

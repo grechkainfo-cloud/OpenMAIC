@@ -1,5 +1,10 @@
 import { describe, expect, test } from 'vitest';
-import { buildPrompt, PROMPT_IDS, processConditionalBlocks } from '@openmaic/generation';
+import {
+  buildLanguageContext,
+  buildPrompt,
+  PROMPT_IDS,
+  processConditionalBlocks,
+} from '@openmaic/generation';
 import { buildPrompt as buildAppPrompt, PROMPT_IDS as APP_PROMPT_IDS } from '@/lib/prompts';
 
 function buildOutlinePrompt(
@@ -27,6 +32,7 @@ function buildOutlinePrompt(
     userProfile: '',
     researchContext: 'None',
     teacherContext: '',
+    languageContext: buildLanguageContext(),
     hasSourceImages: flags.hasSourceImages ?? false,
     imageEnabled,
     videoEnabled,
@@ -49,6 +55,7 @@ function buildSlidePrompt(flags: {
     canvas_width: 1000,
     canvas_height: 562.5,
     teacherContext: '',
+    languageContext: buildLanguageContext(),
     languageDirective: 'Teach in English.',
     imageElementEnabled: flags.imageElementEnabled ?? false,
     generatedImageEnabled,

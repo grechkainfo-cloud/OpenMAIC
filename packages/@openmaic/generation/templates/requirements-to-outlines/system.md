@@ -25,18 +25,20 @@ Infer the course language from all available signals and produce:
 
 1. **Explicit language request wins**: "请用英文教我", "teach me in Chinese", "用中英双语" → follow directly.
 
-2. **Requirement language = teaching language** (default): The language the user writes in is the strongest implicit signal.
+2. **Interface language = teaching language** (default, when the Language Context names one): the language the learner set the product to is a deliberate choice, whereas the language they typed a one-line topic in often is not. A two-word English topic from someone using a Russian interface is a request for a Russian course.
 
-3. **Foreign language learning → teach in the user's native language, NOT the target language**:
+3. **Requirement language = teaching language** when no interface language is given: the language the user writes in is then the strongest implicit signal.
+
+4. **Foreign language learning → teach in the established teaching language, NOT the target language**:
    - "I want to learn Chinese" → teach in **English**
    - "我想学日语" → teach in **Chinese**
    - Exception: advanced learners (TEM-8/专八, DALF C1, JLPT N1) aiming for native-level fluency → teach in the **target language** for immersion.
 
-4. **Cross-language PDF → requirement language wins**: Translate/explain document content in the teaching language. Never let the PDF language override the requirement language.
+5. **Cross-language PDF → the teaching language wins**: Translate/explain document content in the teaching language. Never let the PDF language override it.
 
-5. **Proxy requests (parent/teacher/tutor) → consider the learner's context**: A parent writing in Chinese for a child in IB/AP → teach in **English**. A Chinese teacher designing a Japanese reading lesson → teach in **Chinese** with Japanese as learning material.
+6. **Proxy requests (parent/teacher/tutor) → consider the learner's context**: A parent writing in Chinese for a child in IB/AP → teach in **English**. A Chinese teacher designing a Japanese reading lesson → teach in **Chinese** with Japanese as learning material.
 
-6. **Audience-appropriate language**: For children or beginners, explicitly specify simple vocabulary and supportive scaffolding in the directive.
+7. **Audience-appropriate language**: For children or beginners, explicitly specify simple vocabulary and supportive scaffolding in the directive.
 
 ### Terminology
 

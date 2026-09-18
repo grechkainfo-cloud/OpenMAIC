@@ -1,10 +1,17 @@
 # Bundled font licenses & attribution
 
-`@openmaic/renderer` does **not** embed any font binaries. `fonts.css` only declares
-`@font-face` rules whose `src` points at self-hosted woff2 files on object
-storage (`https://file.maic.chat/fonts/<name>.woff2`). Serving those faces is a
-form of redistribution, so each face below must be cleared for redistribution
-and attributed here. This file is the font attribution/clearance record; it is
+> **Status: no faces are served.** The whitelist in `fonts.config.mjs` is empty
+> and `fonts.css` declares no `@font-face` rules, so this fork currently
+> redistributes no font binaries at all. The clearance record below is kept
+> intact because it is what makes re-adding a face cheap and safe: the
+> redistribution question is already answered for each one. Nothing here is a
+> claim that these faces are being served today.
+
+`@openmaic/renderer` does **not** embed any font binaries. `fonts.css` declares
+`@font-face` rules whose `src` points at woff2 files the consuming app serves.
+Serving a face is a form of redistribution, so each face below must be cleared
+for redistribution and attributed here **before** it is added back to the
+whitelist. This file is the font attribution/clearance record; it is
 **separate** from the package's own `LICENSE` (MIT), which does not cover
 the fonts.
 
@@ -13,7 +20,7 @@ the fonts.
 > below if it matches; otherwise the browser falls back. This list mirrors
 > `fonts.config.mjs`.
 
-## Whitelist (6 families)
+## Cleared for redistribution (6 families, none currently served)
 
 | Family (`font-family`) | 中文名 | License | Redistribution | Copyright / source |
 | ---------------------- | ------ | ------- | :------------: | ------------------ |

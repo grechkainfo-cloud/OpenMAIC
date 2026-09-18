@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
+import { currentLocale } from '@/lib/i18n';
 import type { LanguageModelUsage } from 'ai';
 import { type ComponentProps, createContext, useContext } from 'react';
 import { getUsage } from 'tokenlens';
@@ -96,7 +97,7 @@ export type ContextTriggerProps = ComponentProps<typeof Button>;
 export const ContextTrigger = ({ children, ...props }: ContextTriggerProps) => {
   const { usedTokens, maxTokens } = useContextValue();
   const usedPercent = usedTokens / maxTokens;
-  const renderedPercent = new Intl.NumberFormat('en-US', {
+  const renderedPercent = new Intl.NumberFormat(currentLocale(), {
     style: 'percent',
     maximumFractionDigits: 1,
   }).format(usedPercent);
@@ -128,14 +129,14 @@ export const ContextContentHeader = ({
 }: ContextContentHeaderProps) => {
   const { usedTokens, maxTokens } = useContextValue();
   const usedPercent = usedTokens / maxTokens;
-  const displayPct = new Intl.NumberFormat('en-US', {
+  const displayPct = new Intl.NumberFormat(currentLocale(), {
     style: 'percent',
     maximumFractionDigits: 1,
   }).format(usedPercent);
-  const used = new Intl.NumberFormat('en-US', {
+  const used = new Intl.NumberFormat(currentLocale(), {
     notation: 'compact',
   }).format(usedTokens);
-  const total = new Intl.NumberFormat('en-US', {
+  const total = new Intl.NumberFormat(currentLocale(), {
     notation: 'compact',
   }).format(maxTokens);
 
@@ -183,7 +184,7 @@ export const ContextContentFooter = ({
         },
       }).costUSD?.totalUSD
     : undefined;
-  const totalCost = new Intl.NumberFormat('en-US', {
+  const totalCost = new Intl.NumberFormat(currentLocale(), {
     style: 'currency',
     currency: 'USD',
   }).format(costUSD ?? 0);
@@ -226,7 +227,7 @@ export const ContextInputUsage = ({ className, children, ...props }: ContextInpu
         usage: { input: inputTokens, output: 0 },
       }).costUSD?.totalUSD
     : undefined;
-  const inputCostText = new Intl.NumberFormat('en-US', {
+  const inputCostText = new Intl.NumberFormat(currentLocale(), {
     style: 'currency',
     currency: 'USD',
   }).format(inputCost ?? 0);
@@ -259,7 +260,7 @@ export const ContextOutputUsage = ({ className, children, ...props }: ContextOut
         usage: { input: 0, output: outputTokens },
       }).costUSD?.totalUSD
     : undefined;
-  const outputCostText = new Intl.NumberFormat('en-US', {
+  const outputCostText = new Intl.NumberFormat(currentLocale(), {
     style: 'currency',
     currency: 'USD',
   }).format(outputCost ?? 0);
@@ -296,7 +297,7 @@ export const ContextReasoningUsage = ({
         usage: { reasoningTokens },
       }).costUSD?.totalUSD
     : undefined;
-  const reasoningCostText = new Intl.NumberFormat('en-US', {
+  const reasoningCostText = new Intl.NumberFormat(currentLocale(), {
     style: 'currency',
     currency: 'USD',
   }).format(reasoningCost ?? 0);
@@ -329,7 +330,7 @@ export const ContextCacheUsage = ({ className, children, ...props }: ContextCach
         usage: { cacheReads: cacheTokens, input: 0, output: 0 },
       }).costUSD?.totalUSD
     : undefined;
-  const cacheCostText = new Intl.NumberFormat('en-US', {
+  const cacheCostText = new Intl.NumberFormat(currentLocale(), {
     style: 'currency',
     currency: 'USD',
   }).format(cacheCost ?? 0);
@@ -346,7 +347,7 @@ const TokensWithCost = ({ tokens, costText }: { tokens?: number; costText?: stri
   <span>
     {tokens === undefined
       ? '—'
-      : new Intl.NumberFormat('en-US', {
+      : new Intl.NumberFormat(currentLocale(), {
           notation: 'compact',
         }).format(tokens)}
     {costText ? <span className="ml-2 text-muted-foreground">• {costText}</span> : null}

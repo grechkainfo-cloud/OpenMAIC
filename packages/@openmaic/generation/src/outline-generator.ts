@@ -20,6 +20,42 @@ import { buildPrompt, PROMPT_IDS } from './prompts/index.js';
 export const DEFAULT_LANGUAGE_DIRECTIVE =
   'Teach in the language that matches the user requirement.';
 
+/**
+ * English name of a BCP-47 tag's LANGUAGE, for stating it to the model.
+ *
+ * The language subtag only: `Intl.DisplayNames` renders `ru-RU` as
+ * "Russian (Russia)", and the country is noise in "teach in Russian (Russia)".
+ * Callers pair this with the full tag, so a regional variant that does matter
+ * (`pt-BR`, `zh-TW`) still reaches the model.
+ *
+ * Returns the tag itself if the runtime cannot name it.
+ */
+export function languageDisplayName(locale: string): string {
+  try {
+    const language = new Intl.Locale(locale).language;
+    const names = new Intl.DisplayNames(['en'], { type: 'language' });
+    return names.of(language) ?? locale;
+  } catch {
+    return locale;
+  }
+}
+
+/**
+ * The fallback directive when the model omits one.
+ *
+ * With an interface language it names that language, so a dropped field
+ * degrades to "teach in the language the product is set to" rather than to
+ * "guess from the requirement" — which is the thing this deployment does not
+ * want guessed.
+ */
+export function defaultLanguageDirectiveFor(interfaceLanguage?: string): string {
+  if (!interfaceLanguage) return DEFAULT_LANGUAGE_DIRECTIVE;
+  return (
+    `Teach in ${languageDisplayName(interfaceLanguage)}, the language the learner's ` +
+    'interface is set to, unless the requirement explicitly asks for another language.'
+  );
+}
+
 export interface OutlinePromptContext {
   pdfText?: string;
   pdfImages?: PdfImage[];
@@ -29,6 +65,50 @@ export interface OutlinePromptContext {
   videoGenerationEnabled?: boolean;
   researchContext?: string;
   teacherContext?: string;
+  /**
+   * BCP-47 tag of the learner's INTERFACE language, when the caller knows it.
+   *
+   * The course language used to be inferred from the requirement text alone.
+   * For a deployment that ships one interface language that is the wrong
+   * default: a Russian-speaking author who types a two-word English topic got
+   * an English course. Supplying this makes the interface language the default
+   * and leaves an explicit request in the requirement overriding it.
+   *
+   * Omitted — as in the eval harness, which measures inference itself — the
+   * prompt keeps its original wording and nothing changes.
+   */
+  interfaceLanguage?: string;
+}
+
+/**
+ * The prompt's "Language Context" block.
+ *
+ * Stated to the model as context rather than applied to its output afterwards:
+ * the directive also covers terminology and cross-language material, and a
+ * post-hoc override would throw that away along with the language.
+ */
+export function buildLanguageContext(interfaceLanguage?: string): string {
+  const shared = [
+    '- Foreign language learning → teach in the established teaching language, not the target language',
+    '- PDF language does NOT override teaching language — translate/explain document content instead',
+  ];
+
+  if (!interfaceLanguage) {
+    return [
+      'Infer the course language directive by applying the decision rules from the system prompt. Key reminders:',
+      '- Requirement language = teaching language (unless overridden by explicit request or learner context)',
+      ...shared,
+    ].join('\n');
+  }
+
+  return [
+    `The learner's interface is set to **${languageDisplayName(interfaceLanguage)}** (\`${interfaceLanguage}\`).`,
+    '',
+    'Apply the decision rules from the system prompt. Key reminders:',
+    '- Interface language is the default teaching language',
+    '- An explicit language request in the requirement overrides it',
+    ...shared,
+  ].join('\n');
 }
 
 export interface OutlineGenerationOptions extends Omit<
@@ -107,6 +187,7 @@ export function buildOutlinePrompt(
     mediaEnabled,
     researchContext: context.researchContext || 'None',
     teacherContext: context.teacherContext || '',
+    languageContext: buildLanguageContext(context.interfaceLanguage),
   });
 
   if (!prompts) {
@@ -151,11 +232,16 @@ export async function generateSceneOutlinesFromRequirements(
     let courseTitle: string | undefined;
     let rawOutlines: SceneOutline[];
 
+    // A model that returned a bare array, or omitted the field, must not fall
+    // back to "guess from the requirement" when the caller told us the
+    // interface language.
+    const fallbackDirective = defaultLanguageDirectiveFor(options?.interfaceLanguage);
+
     if (Array.isArray(parsed)) {
-      languageDirective = DEFAULT_LANGUAGE_DIRECTIVE;
+      languageDirective = fallbackDirective;
       rawOutlines = parsed;
     } else if (parsed && parsed.outlines) {
-      languageDirective = parsed.languageDirective || DEFAULT_LANGUAGE_DIRECTIVE;
+      languageDirective = parsed.languageDirective || fallbackDirective;
       const rawTitle = parsed.courseTitle;
       courseTitle =
         typeof rawTitle === 'string' && rawTitle.trim() ? rawTitle.trim().slice(0, 120) : undefined;

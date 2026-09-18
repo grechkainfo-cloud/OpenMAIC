@@ -17,6 +17,25 @@ describe('detectSpeechLang', () => {
     expect(detectSpeechLang('Anh ăn cơm với cá và canh chua')).toBe('vi-VN');
   });
 
+  it('detects Russian narration', () => {
+    expect(detectSpeechLang('Фотосинтез — это основа роста растений')).toBe('ru-RU');
+    expect(detectSpeechLang('Здравствуйте, ребята!')).toBe('ru-RU');
+  });
+
+  it('keeps Russian narration that quotes a Latin term', () => {
+    // Mixed chunks are normal in a technical lesson; the ratio has to decide,
+    // not the first Latin letter.
+    expect(detectSpeechLang('Сейчас мы напишем функцию print() на языке Python')).toBe('ru-RU');
+  });
+
+  it('does not relabel English that quotes one Cyrillic word', () => {
+    expect(
+      detectSpeechLang(
+        'The Russian word for photosynthesis is фотосинтез, and today we will study how it works in green plants',
+      ),
+    ).toBe('en-US');
+  });
+
   it('falls back to en-US for plain English', () => {
     expect(detectSpeechLang('Photosynthesis is how plants grow')).toBe('en-US');
     expect(detectSpeechLang('OK.')).toBe('en-US');

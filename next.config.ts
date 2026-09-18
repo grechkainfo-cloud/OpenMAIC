@@ -3,11 +3,16 @@ import type { NextConfig } from 'next';
 const isVercelBuild = Boolean(process.env.VERCEL);
 
 const nextConfig: NextConfig = {
+  // The dev-only build-activity badge sits in the bottom-left corner and
+  // repaints constantly, which made it the single largest source of noise in
+  // the appearance baselines (`e2e/tests/brand-appearance.spec.ts`). It does
+  // not exist in the production build CI screenshots, so turning it off makes
+  // local and CI runs compare the same page.
+  devIndicators: false,
   output: process.env.VERCEL ? undefined : 'standalone',
   outputFileTracingIncludes: {
     '/*': [
       'lib/server/agent-runtime/import-pptx-worker.mjs',
-      'skills/openmaic/**',
       'skills/agent-runtime/**',
       // Loaded through a runtime-only `import('undici')` (see the LLM
       // dispatcher in lib/ai/providers.ts and the Google proxy transport), so

@@ -200,29 +200,30 @@ export default {
 };
 ```
 
-## Fonts (optional, CDN-hosted)
+## Fonts (optional)
 
-Slides imported from PowerPoint often reference Chinese faces that aren't
-installed on the viewer's machine. The package ships a `fonts.css` with
-`@font-face` rules for a small whitelist of self-hosted CJK faces — import it
-once at your app shell to make those faces available:
+The package ships a `fonts.css` that declares `@font-face` rules for a
+whitelist of families, so a slide referencing one of them by name resolves to a
+real face instead of a system fallback. Import it once at your app shell:
 
 ```ts
 import '@openmaic/renderer/fonts.css';
 ```
 
-> **Runtime dependency — read this.** The `@font-face` `src` URLs point at an
-> external font host (`https://file.maic.chat/fonts/<name>.woff2`); the woff2
-> files are **not** bundled in the package. So this is a hard runtime dependency:
-> the host must be **reachable and CORS-enabled** from the consumer's app, or the
-> browser will **silently fall back to system fonts** (no error, just different
-> glyphs/metrics). If you need a different origin (self-hosting, air-gapped, a
-> private CDN), change `FONT_CDN_BASE_URL` in `fonts.config.mjs` and regenerate
-> with `pnpm run genfonts`.
+> **The whitelist is currently empty**, so this import is a no-op. Upstream
+> declared six CJK faces fetched from an external font host; this fork runs in a
+> network-isolated deployment where that origin is unreachable, so those rules
+> could never load. They are gone rather than merely unreachable — see
+> [fonts.config.mjs](./fonts.config.mjs).
 >
-> The import is **optional** — slides render fine without it, using whatever
-> fonts the system provides. See [FONTS.md](./FONTS.md) for the face list and
-> their licenses.
+> To add a family, give it a `src` the consuming app serves itself
+> (e.g. `/fonts/<name>.woff2` backed by `public/fonts/`) and run
+> `pnpm run genfonts`. The generator **refuses** a `src` on an external origin:
+> that is the failure mode this configuration exists to prevent. Clear the face
+> for redistribution and record it in [FONTS.md](./FONTS.md) first.
+>
+> The import is optional either way — slides render fine without it, using
+> whatever fonts the system provides.
 
 ## Companion package
 

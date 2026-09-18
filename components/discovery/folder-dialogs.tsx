@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useI18n } from '@/lib/hooks/use-i18n';
+import { isSameName } from '@/lib/i18n/text';
 import {
   displayNameWidth,
   FOLDER_NAME_MAX_WIDTH,
@@ -62,7 +63,7 @@ export function NewFolderDialog({
     }
     const trimmed = name.trim();
     // Case-insensitive duplicate check, matching the storage-boundary rule.
-    if (folders.some((f) => f.name.toLowerCase() === trimmed.toLowerCase())) {
+    if (folders.some((f) => isSameName(f.name, trimmed))) {
       setError(t('classroom.folderNameExists'));
       return;
     }

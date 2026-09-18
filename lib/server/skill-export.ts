@@ -6,7 +6,6 @@ import JSZip from 'jszip';
 import { dump as dumpYaml, load as loadYaml } from 'js-yaml';
 import { UserSkillError, validateUserSkillInput, type UserSkillFields } from '@openmaic/storage';
 
-export const openClawSkillDir = join(process.cwd(), 'skills', 'openmaic');
 export const builtinSkillsDir = join(process.cwd(), 'skills', 'agent-runtime');
 
 /** A download id may name only one entry below a known skill root. */
@@ -43,10 +42,6 @@ export async function buildSkillDirZip(dir: string, root: string): Promise<Buffe
   }
   dirZipCache.set(dir, zip);
   return zip;
-}
-
-export function buildOpenClawSkillZip(): Promise<Buffer | null> {
-  return buildSkillDirZip(openClawSkillDir, 'openmaic');
 }
 
 export function buildBuiltinSkillZip(id: string): Promise<Buffer | null> {

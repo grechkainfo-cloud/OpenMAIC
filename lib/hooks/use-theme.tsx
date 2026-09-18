@@ -69,3 +69,15 @@ export function useTheme() {
   }
   return context;
 }
+
+/**
+ * The resolved theme, falling back to light when no provider is mounted.
+ *
+ * For readers that only want to pick between a light and a dark asset and have
+ * no business failing without a provider — a unit test rendering one row of a
+ * rail, a storybook-style isolated render. `useTheme()` keeps throwing, because
+ * anything that *sets* the theme genuinely needs the provider.
+ */
+export function useResolvedTheme(): 'light' | 'dark' {
+  return useContext(ThemeContext)?.resolvedTheme ?? 'light';
+}

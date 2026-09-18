@@ -7,23 +7,28 @@ export type LocaleEntry = {
 };
 
 /**
- * Supported locales registry.
+ * Supported INTERFACE locales.
  *
- * To add a new language:
- *   1. Create `lib/i18n/locales/<code>.json` (copy an existing file as template)
+ * Russian first: it is the default (`lib/i18n/types.ts`), English is the
+ * fallback every untranslated key resolves through.
+ *
+ * Upstream shipped twelve; this deployment serves two, so a copy change is two
+ * files instead of twelve. The ten that were dropped are in git history if one
+ * is ever wanted back.
+ *
+ * NOTE: this list is the UI language, NOT the language a course can be
+ * generated in. Content language is carried per course by
+ * `stage.languageDirective` and is not limited to this list — the model can
+ * author a course in any language it supports, and the PBL instructor and the
+ * video-export chrome keep their own per-language strings keyed by plain
+ * strings for exactly that reason.
+ *
+ * To add a language:
+ *   1. Create `lib/i18n/locales/<code>.json` (copy `en-US.json` as template)
  *   2. Add an entry here
+ *   3. Optionally add `lib/i18n/workbench-locales/<code>.json`
  */
 export const supportedLocales = [
-  { code: 'zh-CN', label: '简体中文', shortLabel: 'CN' },
-  { code: 'zh-TW', label: '繁體中文', shortLabel: 'TW' },
-  { code: 'en-US', label: 'English', shortLabel: 'EN' },
-  { code: 'ja-JP', label: '日本語', shortLabel: 'JA' },
   { code: 'ru-RU', label: 'Русский', shortLabel: 'RU' },
-  { code: 'ar-SA', label: 'العربية', shortLabel: 'AR' },
-  { code: 'pt-BR', label: 'Português (Brasil)', shortLabel: 'BR' },
-  { code: 'ko-KR', label: '한국어', shortLabel: 'KO' },
-  { code: 'es-MX', label: 'Español (México)', shortLabel: 'ES' },
-  { code: 'fr-FR', label: 'Français', shortLabel: 'FR' },
-  { code: 'vi-VN', label: 'Tiếng Việt', shortLabel: 'VI' },
-  { code: 'de-DE', label: 'Deutsch', shortLabel: 'DE' },
+  { code: 'en-US', label: 'English', shortLabel: 'EN' },
 ] as const satisfies readonly LocaleEntry[];

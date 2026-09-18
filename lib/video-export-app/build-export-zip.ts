@@ -16,7 +16,7 @@
  */
 import { compileVideoTimeline, emitHyperframes, toSrt, toVtt } from '@/lib/video-export';
 import { useStageStore } from '@/lib/store';
-import type { Locale } from '@/lib/i18n';
+import type { ContentLocale } from '@/lib/i18n';
 import { resolveExportStageName } from './resolve-stage-name';
 import { createVideoTimelineDeps } from './timeline-deps';
 import { collectVideoAssets } from './collect';
@@ -24,6 +24,7 @@ import { getVideoExportCoverLabels, resolveVideoExportCta } from './cover-config
 import { NoScenesError, VIDEO_RESOLUTIONS, type VideoResolution } from './export-options';
 import { createQuizLayoutProbe } from './quiz-layout';
 import { packageVideoZip } from './package-zip';
+import { BRAND } from '@/lib/brand/brand-config';
 
 export {
   NoScenesError,
@@ -73,7 +74,7 @@ function configuredVideoExportCta() {
  */
 async function compileStageIr(options: {
   resolution: VideoResolution;
-  locale: Locale;
+  locale: ContentLocale;
   labels: ReturnType<typeof getVideoExportCoverLabels>;
   skipGeometry?: boolean;
   skipInteractiveHtml?: boolean;
@@ -126,7 +127,7 @@ export interface BuildExportZipOptions {
   /** Burn the subtitle overlay into the video. Default false (sidecar SRT/VTT only). */
   burnInSubtitles?: boolean;
   /** Locale the card chrome and the emitted document are written in. */
-  locale: Locale;
+  locale: ContentLocale;
 }
 
 /**
@@ -161,6 +162,7 @@ export async function buildExportZip(
     labels,
     locale,
     cta,
+    productName: BRAND.productName,
   });
 
   // 4. collect asset bytes (slide snapshots + narration/media).
@@ -202,7 +204,7 @@ export interface CompiledSubtitles {
  */
 export interface CompileSubtitlesOptions {
   resolution: VideoResolution;
-  locale: Locale;
+  locale: ContentLocale;
 }
 
 export async function compileSubtitles(

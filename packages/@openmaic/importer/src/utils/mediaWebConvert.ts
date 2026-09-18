@@ -33,8 +33,32 @@ type PdfjsLib = {
 };
 const pdfjs = pdfjsLib as unknown as PdfjsLib;
 
-const PDFJS_CDN_VERSION = pdfjs.version || '4.8.69';
-pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${PDFJS_CDN_VERSION}/legacy/build/pdf.worker.min.mjs`;
+/** Must match `PDF_WORKER_FILENAME` in scripts/sync-maic-importer.mjs. */
+const PDF_WORKER_FILENAME = 'pdf.worker.min.mjs';
+
+/**
+ * Where the pdf.js worker is served from.
+ *
+ * A path served by the host app, not a CDN. The previous value pointed at
+ * `cdn.jsdelivr.net`, so on a network-isolated deployment the worker never
+ * loaded and EMF-vector artwork in an imported `.pptx` silently failed to
+ * convert. It also pinned the worker by version string, which can disagree
+ * with the `pdfjs-dist` actually installed — a mismatched pair throws at
+ * runtime. The vendored copy is taken from the installed package, so the two
+ * cannot drift.
+ *
+ * `scripts/sync-maic-importer.mjs` puts it next to this bundle during
+ * `postinstall`. A host that serves it elsewhere calls
+ * {@link setPdfWorkerSrc} before importing a `.pptx`.
+ */
+export const DEFAULT_PDF_WORKER_SRC = `/vendor/maic-importer/${PDF_WORKER_FILENAME}`;
+
+pdfjs.GlobalWorkerOptions.workerSrc = DEFAULT_PDF_WORKER_SRC;
+
+/** Point pdf.js at a worker served from somewhere other than the default. */
+export function setPdfWorkerSrc(src: string): void {
+  pdfjs.GlobalWorkerOptions.workerSrc = src;
+}
 
 type UtifPage = {
   width: number;

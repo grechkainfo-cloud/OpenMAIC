@@ -10,16 +10,38 @@
  */
 
 /**
+ * Base path the injected KaTeX runtime is loaded from.
+ *
+ * A path served by the app itself, not a CDN. The previous value pointed at
+ * `cdn.jsdelivr.net`, which meant every formula in every generated scene
+ * rendered as raw `$...$` on any deployment without egress to the public
+ * internet — in the app, not only in exports. `scripts/generate-katex-runtime.mjs`
+ * vendors the three files this expects.
+ *
+ * Override it through {@link InteractiveHtmlOptions.katexBase} if the host app
+ * serves the runtime somewhere else.
+ */
+export const DEFAULT_KATEX_BASE = '/vendor/katex';
+
+export interface InteractiveHtmlOptions {
+  /** Where `katex.min.css`, `katex.min.js` and `auto-render.min.js` are served. */
+  katexBase?: string;
+}
+
+/**
  * Main entry point: post-process generated interactive HTML
  * Converts LaTeX delimiters and injects KaTeX rendering resources.
  */
-export function postProcessInteractiveHtml(html: string): string {
+export function postProcessInteractiveHtml(
+  html: string,
+  options: InteractiveHtmlOptions = {},
+): string {
   // Convert LaTeX delimiters while protecting script tags
   let processed = convertLatexDelimiters(html);
 
   // Inject KaTeX resources if not already present
   if (!processed.toLowerCase().includes('katex')) {
-    processed = injectKatex(processed);
+    processed = injectKatex(processed, options.katexBase ?? DEFAULT_KATEX_BASE);
   }
 
   return processed;
@@ -67,11 +89,12 @@ function convertLatexDelimiters(html: string): string {
  * Inject KaTeX CSS, JS, auto-render, and MutationObserver before </head>.
  * Falls back to appending at end if </head> is not found.
  */
-function injectKatex(html: string): string {
+function injectKatex(html: string, katexBase: string): string {
+  const base = katexBase.replace(/\/+$/, '');
   const katexInjection = `
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<link rel="stylesheet" href="${base}/katex.min.css">
+<script src="${base}/katex.min.js"></script>
+<script src="${base}/auto-render.min.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     const katexOptions = {

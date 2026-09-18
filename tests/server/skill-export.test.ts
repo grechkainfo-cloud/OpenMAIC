@@ -1,28 +1,14 @@
-import { readdirSync, readFileSync } from 'node:fs';
-import { join, relative } from 'node:path';
 import JSZip from 'jszip';
 import { load as loadYaml } from 'js-yaml';
 import { describe, expect, it } from 'vitest';
 
 import {
   buildBuiltinSkillZip,
-  buildOpenClawSkillZip,
   buildUserSkillZip,
   isSafeSkillId,
-  openClawSkillDir,
   parseUserSkillMarkdown,
   parseUserSkillZip,
 } from '@/lib/server/skill-export';
-
-function walkRelative(dir: string, base = dir): string[] {
-  const out: string[] = [];
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    const full = join(dir, entry.name);
-    if (entry.isDirectory()) out.push(...walkRelative(full, base));
-    else if (entry.isFile()) out.push(relative(base, full).split('\\').join('/'));
-  }
-  return out;
-}
 
 /**
  * Offset of `name`'s record in the zip central directory. JSZip reads entry
@@ -58,22 +44,6 @@ function skillMarkdown(body: string): string {
 }
 
 describe('skill export zips', () => {
-  it('packages the shipped OpenMAIC skill verbatim under openmaic/', async () => {
-    const zip = await buildOpenClawSkillZip();
-    expect(zip).not.toBeNull();
-    const loaded = await JSZip.loadAsync(zip!);
-    const onDisk = walkRelative(openClawSkillDir);
-    const entries = Object.values(loaded.files)
-      .filter((file) => !file.dir)
-      .map((file) => file.name);
-    expect(new Set(entries)).toEqual(new Set(onDisk.map((path) => `openmaic/${path}`)));
-    for (const path of onDisk) {
-      expect(await loaded.file(`openmaic/${path}`)!.async('string')).toBe(
-        readFileSync(join(openClawSkillDir, path), 'utf8'),
-      );
-    }
-  });
-
   it('packages builtin constraints and returns null for an unknown builtin', async () => {
     const loaded = await JSZip.loadAsync((await buildBuiltinSkillZip('lecture-style'))!);
     expect(await loaded.file('lecture-style/SKILL.md')!.async('string')).toContain(

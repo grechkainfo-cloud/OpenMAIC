@@ -93,16 +93,16 @@ describe('create_skill tool card', () => {
       text: '',
       toolName: 'create_skill',
       toolState: 'done',
-      toolResultText: '已保存 Skill「复盘方法」',
+      toolResultText: 'Skill сохранён「复盘方法」',
       toolDetails: { skillId: 'usk_3', name: 'my-review' },
     });
 
     await act(async () => host.querySelector('button')!.click());
     await act(async () => {});
 
-    expect(host.textContent).toContain('已保存 Skill「复盘方法」');
-    expect(host.textContent).toContain('Skill 正文加载失败');
-    expect(host.textContent).not.toContain('Skill 列表加载失败');
+    expect(host.textContent).toContain('Skill сохранён「复盘方法」');
+    expect(host.textContent).toContain('Не удалось загрузить полное содержимое Skill');
+    expect(host.textContent).not.toContain('Не удалось загрузить список скиллов');
   });
 
   it('keeps the durable receipt visible while historical content is still loading', async () => {
@@ -116,14 +116,14 @@ describe('create_skill tool card', () => {
       text: '',
       toolName: 'create_skill',
       toolState: 'done',
-      toolResultText: '已保存 Skill「慢请求」',
+      toolResultText: 'Skill сохранён「慢请求」',
       toolDetails: { skillId: 'usk_4', name: 'my-slow-skill' },
     });
 
     await act(async () => host.querySelector('button')!.click());
 
-    expect(host.textContent).toContain('已保存 Skill「慢请求」');
-    expect(host.textContent).toContain('加载中');
+    expect(host.textContent).toContain('Skill сохранён「慢请求」');
+    expect(host.textContent).toContain('Загрузка');
   });
 });
 
@@ -166,7 +166,7 @@ describe('tool output renders fenced, as data', () => {
     });
     // The collapsed row shows the labelled form: the source is named as outside
     // the session, and the fetched body is not echoed in the summary.
-    expect(host.textContent).toContain('来源不在本会话内');
+    expect(host.textContent).toContain('Источник вне этой сессии');
     expect(host.textContent).not.toContain('fetched body must stay fenced');
   });
 });

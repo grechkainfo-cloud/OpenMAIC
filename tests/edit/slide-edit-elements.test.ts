@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+import { BRAND } from '@/lib/brand/brand-config';
 import {
   createDefaultChartElement,
   createDefaultImageElement,
@@ -18,7 +19,7 @@ describe('slide edit element factories', () => {
       id: 'text-1',
       type: 'text',
       content: '<p>New text</p>',
-      defaultFontName: 'Inter',
+      defaultFontName: BRAND.fonts.slideDefault,
       defaultColor: '#111827',
       lineHeight: 1.4,
     });
@@ -136,7 +137,7 @@ describe('slide edit element factories', () => {
       top: 65,
       width: 300,
       height: 60,
-      defaultFontName: 'Inter',
+      defaultFontName: BRAND.fonts.slideDefault,
       defaultColor: '#333',
       content: '<p style="text-align: center"><br></p>',
     });

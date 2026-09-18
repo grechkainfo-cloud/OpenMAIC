@@ -31,11 +31,23 @@ const VI_DECIDER_RE = /[đĐơƠưƯ\u1EA0-\u1EF9]/;
 const VI_BROAD_RE = /[ăâêôĂÂÊÔ]/g;
 const VI_BROAD_THRESHOLD = 0.02;
 
-/** Language tag for a narration chunk: zh-CN, vi-VN, or en-US fallback. */
+// Cyrillic, by ratio rather than by first occurrence: a Russian narration chunk
+// is overwhelmingly Cyrillic, while an English one may carry a single Cyrillic
+// letter inside a quoted term, and that must not relabel the whole chunk.
+//
+// No attempt is made to split Cyrillic into Russian / Ukrainian / Bulgarian.
+// A narration chunk follows the course language, this deployment's course
+// language is Russian, and guessing between close Cyrillic languages from one
+// sentence is less reliable than the fallback it would replace.
+const CYRILLIC_RE = /[\u0400-\u04ff]/g;
+const CYRILLIC_THRESHOLD = 0.2;
+
+/** Language tag for a narration chunk: ru-RU, zh-CN, vi-VN, or en-US fallback. */
 export function detectSpeechLang(text: string): string {
   if (!text) return 'en-US';
   const cjkRatio = (text.match(/[\u4e00-\u9fff\u3400-\u4dbf]/g) || []).length / text.length;
   if (cjkRatio > CJK_LANG_THRESHOLD) return 'zh-CN';
+  if ((text.match(CYRILLIC_RE) || []).length / text.length > CYRILLIC_THRESHOLD) return 'ru-RU';
   if (VI_DECIDER_RE.test(text)) return 'vi-VN';
   if ((text.match(VI_BROAD_RE) || []).length / text.length > VI_BROAD_THRESHOLD) return 'vi-VN';
   return 'en-US';

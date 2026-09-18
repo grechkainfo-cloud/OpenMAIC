@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { deriveToolProgress, progressLine } from '@/components/workbench/chat/tool-progress';
 
 describe('deriveToolProgress', () => {
-  it('starts generate_scene on 锁定页面', () => {
+  it('starts generate_scene on the page-lock step', () => {
     const p = deriveToolProgress({
       toolName: 'generate_scene',
       traces: [],
@@ -10,7 +10,7 @@ describe('deriveToolProgress', () => {
       failed: false,
     });
     expect(p?.steps.map((s) => s.state)).toEqual(['active', 'pending', 'pending', 'pending']);
-    expect(p?.caption).toContain('对齐');
+    expect(p?.caption).toContain('Выравнивает');
   });
 
   it('advances generate_scene through content then actions', () => {
@@ -38,7 +38,7 @@ describe('deriveToolProgress', () => {
       failed: false,
     });
     expect(later?.steps.find((s) => s.state === 'active')?.id).toBe('actions');
-    expect(later?.caption).toContain('动作');
+    expect(later?.caption).toContain('действия');
   });
 
   it('marks every generate_scene step done when the call finishes', () => {
@@ -64,7 +64,7 @@ describe('deriveToolProgress', () => {
       running: true,
       failed: false,
     });
-    expect(start && progressLine(start)).toBe('锁定页面');
+    expect(start && progressLine(start)).toBe('Зафиксировать страницу');
 
     const mid = deriveToolProgress({
       toolName: 'generate_scene',
@@ -72,6 +72,6 @@ describe('deriveToolProgress', () => {
       running: true,
       failed: false,
     });
-    expect(mid && progressLine(mid)).toBe('写内容');
+    expect(mid && progressLine(mid)).toBe('Написать содержимое');
   });
 });

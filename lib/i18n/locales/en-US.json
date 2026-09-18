@@ -534,7 +534,7 @@
       "panRight": "Pan right",
       "collapseAxis": "Collapse to axis",
       "expandTrack": "Expand track",
-      "emptyHint": "Drag actions onto the axis to start, or let MAIC Agent generate narration.",
+      "emptyHint": "Drag actions onto the axis to start, or let {{brandAgent}} generate narration.",
       "speechPlaceholder": "Enter this narration line…",
       "reorder": "Drag to reorder",
       "moveLeft": "Move left",
@@ -586,20 +586,22 @@
       "title": "Regenerate narration",
       "running": "Generating…",
       "noActions": "No actions generated",
-      "actionsCount": "{{count}} actions",
       "generating": "Generating",
       "notGenerated": "Not generated",
-      "updated": "Updated"
+      "updated": "Updated",
+      "actionsCount_one": "{{count}} action",
+      "actionsCount_other": "{{count}} actions"
     },
     "regenScene": {
       "title": "Regenerate slide",
       "generating": "Generating",
       "updated": "Updated",
       "notGenerated": "Not generated",
-      "elementsCount": "{{count}} elements",
       "restore": "Restore previous",
       "restored": "Restored",
-      "resume": "Resume"
+      "resume": "Resume",
+      "elementsCount_one": "{{count}} element",
+      "elementsCount_other": "{{count}} elements"
     },
     "fixHtml": {
       "title": "Fix interactive page",
@@ -624,7 +626,6 @@
     },
     "roster": {
       "title": "Class roster",
-      "count": "{{count}} members",
       "editHint": "Click a member to edit",
       "personaLabel": "Persona",
       "personaPlaceholder": "Describe the role personality, teaching style, and tasks...",
@@ -636,7 +637,9 @@
       "removeFromClass": "Remove from class",
       "aiClassmates": "AI classmates · {{count}}",
       "addRole": "Add role",
-      "shortTitle": "Roster"
+      "shortTitle": "Roster",
+      "count_one": "{{count}} member",
+      "count_other": "{{count}} members"
     },
     "elementRef": {
       "remove": "Remove reference {{label}}",
@@ -679,7 +682,8 @@
     "restore": "Restore",
     "noHistory": "No history yet",
     "restored": "Whiteboard restored",
-    "elementCount": "{{count}} elements"
+    "elementCount_one": "{{count}} element",
+    "elementCount_other": "{{count}} elements"
   },
   "quiz": {
     "title": "Quiz",
@@ -967,7 +971,6 @@
     "recentClassrooms": "Recent",
     "today": "Today",
     "yesterday": "Yesterday",
-    "daysAgo": "days ago",
     "slides": "slides",
     "nameCopied": "Name copied",
     "deleteConfirmTitle": "Delete",
@@ -1006,14 +1009,14 @@
     "emptyLibraryHint": "No courses yet — create one above, or import a course.",
     "folderNameEmpty": "Folder name cannot be empty",
     "deleteFolderOnly": "Delete folder only",
-    "deleteFolderAndCourses": "Delete folder and {{count}} course",
     "deleteFolderAndCourses_other": "Delete folder and {{count}} courses",
     "deleteFolderConfirmRemove": "This removes the folder and its courses, including chat history.",
     "notFound": "Course not found",
     "notFoundDesc": "This course does not exist, or it has been deleted.",
     "loadUnavailable": "Couldn't load this course",
     "loadUnavailableDesc": "The course could not be retrieved. Check your access or try again.",
-    "backToHome": "Back to home"
+    "backToHome": "Back to home",
+    "deleteFolderAndCourses_one": "Delete folder and {{count}} course"
   },
   "upload": {
     "pdfSizeLimit": "Supports PDF files up to 50MB",
@@ -1102,7 +1105,6 @@
     "deleteSceneConfirmDesc": "This scene and its key points will be removed from the outline.",
     "deleteSceneConfirmAction": "Delete",
     "collapseEditor": "Collapse",
-    "quizConfigSummary": "{{count}} questions",
     "interactiveWidgetKind": "Widget kind",
     "widgetSimulation": "Simulation",
     "widgetDiagram": "Diagram",
@@ -1135,7 +1137,9 @@
     "webSearchFailed": "Web search failed",
     "outlinesReadyCount": "{{ready}} / {{total}} sections ready",
     "jumpToBlankTitle": "Jump to a section that still needs a title",
-    "analyzingMediaMaterial": "Analyzing audio/video"
+    "analyzingMediaMaterial": "Analyzing audio/video",
+    "quizConfigSummary_one": "{{count}} question",
+    "quizConfigSummary_other": "{{count}} questions"
   },
   "settings": {
     "title": "Settings",
@@ -1182,10 +1186,8 @@
     "directAnswer": "Direct Answer",
     "multiAgentMode": "Multi-Agent Mode",
     "agentsCollaborating": "Collaborative Discussion",
-    "agentsCollaboratingCount": "{{count}} agents selected for collaborative discussion",
     "priority": "Priority",
     "actions": "Actions",
-    "actionCount": "{{count}} actions",
     "selectedAgent": "Selected Agent",
     "selectedAgents": "Selected Agents",
     "required": "Required",
@@ -1413,7 +1415,6 @@
     "voxcpmCloneCount": "Clone {{count}}",
     "voxcpmCloneUnsupported": "Current backend does not support cloning",
     "voxcpmVoicePool": "Voice Pool",
-    "voxcpmVoiceCount": "{{count}} voices",
     "voxcpmAutoVoice": "Auto Voice",
     "voxcpmAutoVoiceDescription": "Use the agent persona as the voice prompt",
     "voxcpmUnavailable": "Unavailable",
@@ -1871,7 +1872,7 @@
       "download": "Download",
       "detailFailed": "Could not load the skill details",
       "contentLabel": "Content",
-      "builtinDetailNote": "This skill ships with OpenMAIC. Download it to import into another agent workspace.",
+      "builtinDetailNote": "This skill ships with {{brand}}. Download it to import into another agent workspace.",
       "upload": "Upload",
       "uploading": "Uploading…",
       "uploadFailed": "Could not upload the skill. Check the file and try again.",
@@ -1883,15 +1884,19 @@
     },
     "ttsBrowserNativeTimelineNotice": "Browser-native TTS doesn't support the editor timeline's audio features (preview, regenerate, and bulk voiceover). Switch to a managed TTS provider to generate and manage per-line audio.",
     "alidocmindAccessKeyId": "AccessKey ID",
-    "alidocmindAccessKeySecret": "AccessKey Secret"
+    "alidocmindAccessKeySecret": "AccessKey Secret",
+    "actionCount_one": "{{count}} action",
+    "actionCount_other": "{{count}} actions",
+    "agentsCollaboratingCount_one": "{{count}} agent selected for collaborative discussion",
+    "agentsCollaboratingCount_other": "{{count}} agents selected for collaborative discussion",
+    "voxcpmVoiceCount_one": "{{count}} voice",
+    "voxcpmVoiceCount_other": "{{count}} voices"
   },
   "workspace": {
     "untitledCourse": "Untitled course",
-    "sceneCount": "{{count}} pages",
     "sceneCount_one": "{{count}} page",
     "sceneCount_other": "{{count}} pages",
     "courseLinkHint": "Open {{name}} in the right pane",
-    "courseLinkMore": "{{count}} more classroom(s)",
     "courseMention": {
       "title": "Reference a classroom for this message",
       "empty": "No classroom matches",
@@ -1900,7 +1905,8 @@
       "pillHint": "This message references {{name}}",
       "notAccepted": "The server is temporarily unavailable. Please try again shortly.",
       "reference": "Reference {{name}}",
-      "capped": "Showing the first {{count}} — keep typing to narrow it down"
+      "capped_one": "Showing the first {{count}} — keep typing to narrow it down",
+      "capped_other": "Showing the first {{count}} — keep typing to narrow it down"
     },
     "heroTitle": "What will you create today?",
     "heroSubtitle": "Share an idea and turn it into a learning journey people can step into",
@@ -1922,10 +1928,7 @@
     "currentSession": "Current chat",
     "startLearning": "Start learning",
     "time": {
-      "justNow": "Just now",
-      "minutesAgo": "{{count}}m ago",
-      "hoursAgo": "{{count}}h ago",
-      "daysAgo": "{{count}}d ago"
+      "justNow": "Just now"
     },
     "sessionStatus": {
       "connecting": "Connecting",
@@ -1939,7 +1942,6 @@
     "searchPlaceholder": "Filter by name",
     "searchAria": "Search {{section}}",
     "searchEmpty": "No matches",
-    "showMore": "Show {{count}} more",
     "showLess": "Show less",
     "utilitiesAria": "Preferences and account",
     "resizeAria": "Drag to resize the sidebar",
@@ -1979,7 +1981,11 @@
     "courseTabsAria": "Open courses",
     "courseTabClose": "Close tab: {{name}}",
     "courseTabRunning": "Generating",
-    "foldersUnavailable": "Folders are not available in this build"
+    "foldersUnavailable": "Folders are not available in this build",
+    "courseLinkMore_one": "{{count}} more classroom",
+    "courseLinkMore_other": "{{count}} more classrooms",
+    "showMore_one": "Show {{count}} more",
+    "showMore_other": "Show {{count}} more"
   },
   "profile": {
     "title": "Profile",

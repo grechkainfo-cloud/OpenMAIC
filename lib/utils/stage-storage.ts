@@ -70,6 +70,7 @@ import {
   type MediaTaskLookupEntry,
 } from '@/lib/media/media-task-resolution';
 import { slideMediaReferenceSlots } from '@/lib/media/slide-media-slots';
+import { isSameName } from '@/lib/i18n/text';
 
 const log = createLogger('StageStorage');
 
@@ -1209,9 +1210,7 @@ function assertFolderName(name: string, existing: FolderRecord[], currentId?: st
     );
   }
   const trimmed = name.trim();
-  const clash = existing.some(
-    (f) => f.name.toLowerCase() === trimmed.toLowerCase() && f.id !== currentId,
-  );
+  const clash = existing.some((f) => isSameName(f.name, trimmed) && f.id !== currentId);
   if (clash) throw new FolderNameError('A folder with this name already exists', 'duplicate');
 }
 

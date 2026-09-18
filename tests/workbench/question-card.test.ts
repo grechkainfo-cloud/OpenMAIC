@@ -102,7 +102,7 @@ describe('questionHint', () => {
     expect(questionHint(question({ questionOptions: options }))).toBeNull();
     expect(
       questionHint(question({ questionOptions: options, questionMultiSelect: true })),
-    ).toContain('多选');
+    ).toContain('Выберите всё подходящее');
     expect(questionHint(question({ questionAnswered: true }))).toBeNull();
     expect(
       questionHint(

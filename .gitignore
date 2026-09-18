@@ -73,7 +73,12 @@ next-env.d.ts
 /logs
 
 # docs
-/docs
+# Upstream ignores this whole directory. The deployment's own documentation
+# lives here and has to be tracked, so re-include it explicitly: a plan or a
+# rebrand runbook nobody can pull is a document that does not exist.
+/docs/*
+!/docs/branding.md
+!/docs/plan/
 # Eval results
 eval/whiteboard-layout/results/
 eval/outline-language/results/
