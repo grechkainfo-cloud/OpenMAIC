@@ -111,6 +111,23 @@ export function sessionCookieSecure(): boolean {
 }
 
 /**
+ * Extra guidance when a value looks like a shell expression nobody expanded.
+ *
+ * An `.env` file is not a script: Docker Compose and Next read it literally, so
+ * a line pasted as `AUTH_SESSION_SECRET=$(openssl rand -base64 48)` stores those
+ * 26 characters verbatim. The length check catches it, but "26 characters" on
+ * its own sends people looking for a truncation that never happened.
+ */
+function unexpandedSubstitutionHint(value: string): string {
+  if (!/^\$[({`]|^`/.test(value)) return '';
+  return (
+    ` — the value is literally "${value}", which looks like a shell substitution ` +
+    'that was never run. An .env file is read literally: generate the secret in a ' +
+    'shell first, then paste the result.'
+  );
+}
+
+/**
  * Validate the identity configuration, or throw.
  *
  * Called from `instrumentation.ts`, which runs before the server accepts a
@@ -125,7 +142,8 @@ export function assertAuthConfig(): void {
   if (secret.length < MIN_SESSION_SECRET_LENGTH) {
     throw new Error(
       `AUTH_SESSION_SECRET is ${secret.length} characters; at least ` +
-        `${MIN_SESSION_SECRET_LENGTH} are required. Generate one with: openssl rand -base64 48`,
+        `${MIN_SESSION_SECRET_LENGTH} are required. Generate one with: ` +
+        `openssl rand -base64 48${unexpandedSubstitutionHint(secret)}`,
     );
   }
   sessionMaxAgeSeconds();

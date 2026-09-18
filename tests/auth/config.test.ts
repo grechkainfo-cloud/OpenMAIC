@@ -66,6 +66,23 @@ describe('identity configuration', () => {
       expect(() => assertAuthConfig()).toThrow(/at least 32/);
     });
 
+    it('names the cause when the secret is an unexpanded shell substitution', () => {
+      // An .env file is read literally, so a pasted `$(openssl rand …)` is
+      // stored as those 26 characters. "26 characters" alone sends people
+      // hunting for a truncation that never happened.
+      process.env.AUTH_PROVIDER = 'test';
+      process.env.AUTH_SESSION_SECRET = '$(openssl rand -base64 48)';
+
+      expect(() => assertAuthConfig()).toThrow(/looks like a shell substitution/);
+    });
+
+    it('does not cry substitution over an ordinary short secret', () => {
+      process.env.AUTH_PROVIDER = 'test';
+      process.env.AUTH_SESSION_SECRET = 'short';
+
+      expect(() => assertAuthConfig()).not.toThrow(/shell substitution/);
+    });
+
     it('refuses the windows provider until it exists', () => {
       // Better at startup than as a 500 on somebody's first sign-in attempt.
       process.env.AUTH_PROVIDER = 'windows';
