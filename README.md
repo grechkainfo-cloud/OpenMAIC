@@ -119,10 +119,15 @@ sha256sum openmaic-*.tar > openmaic-$OPENMAIC_IMAGE_TAG.sha256
 ```
 /opt/openmaic/
 ├── docker-compose.contour.yml     из репозитория
-├── .env.local                     из .env.contour.example
-├── server-providers.yml           из server-providers.example.yml
-└── certs/corporate-ca.crt         корневой сертификат организации
+├── .env.local                     из .env.contour.example — ОБЯЗАТЕЛЕН
+├── server-providers.yml           из server-providers.example.yml — опционально
+└── certs/corporate-ca.crt         корневой сертификат — только при HTTPS
 ```
+
+Без `.env.local` запуск падает сразу: `env file … not found`. Два других файла
+опциональны, их монтирование в compose закомментировано — если источника
+bind-mount нет, Docker создаёт на его месте каталог, и приложение падает далеко
+от причины. Раскомментируйте строки тогда же, когда создадите сами файлы.
 
 `.env.local` и `server-providers.yml` содержат секреты: права `0600`, владелец —
 учётная запись, от которой запускается docker. Ни один из них не попадает ни в

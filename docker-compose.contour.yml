@@ -27,28 +27,40 @@ services:
       # Start from .env.contour.example — that file documents every value.
       - .env.local
     environment:
-      # Node's trust store does not include the corporate CA, so TLS to an
+      # Uncomment BOTH this and the certs mount below when the contour's
+      # services are reached over HTTPS with an internally issued certificate.
+      #
+      # Node's trust store does not contain the corporate CA, so TLS to an
       # internal service — the LLM endpoint, MinerU, PostgreSQL with sslmode
       # above `require` — fails certificate verification. This variable is the
-      # supported way in: it is read by Node itself, so undici (the LLM and
-      # MinerU transports) and node-postgres both honour it.
+      # supported way in: Node itself reads it, so undici (the LLM and MinerU
+      # transports) and node-postgres both honour it.
       #
-      # It expects a FILE, not a directory. Concatenate the chain if the
-      # internal CA is issued by a root that is also not public.
-      - NODE_EXTRA_CA_CERTS=/app/certs/corporate-ca.crt
+      # It expects a FILE, not a directory, and the full chain if the internal
+      # CA is itself issued by a non-public root.
+      # - NODE_EXTRA_CA_CERTS=/app/certs/corporate-ca.crt
       # Set only when the MP4 render service runs (profile below). Pointing at
       # an absent service is safe — the capability probe reports export
       # unavailable and the app degrades to the self-contained ZIP download.
       - RENDER_SERVICE_URL=http://render-service:9000
     volumes:
+      # Both file mounts below are commented out on purpose. Docker creates a
+      # DIRECTORY where a bind-mount source is missing, so a stack started
+      # before these files exist would mount a directory named
+      # `corporate-ca.crt` and fail somewhere far from the cause.
+      #
       # Read-only, and never baked into the image: the CA is site configuration,
-      # and an image that carries one organisation's trust anchors cannot be
-      # reviewed as the same artifact everywhere it runs.
-      - ./certs/corporate-ca.crt:/app/certs/corporate-ca.crt:ro
-      # Provider configuration: base URLs, keys and force-off switches. Keys are
-      # in this file, so it is read-only and lives outside the image.
-      # Start from server-providers.example.yml.
-      - ./server-providers.yml:/app/server-providers.yml:ro
+      # and an image carrying one organisation's trust anchors is not the same
+      # artifact everywhere it runs. Uncomment together with
+      # NODE_EXTRA_CA_CERTS above.
+      # - ./certs/corporate-ca.crt:/app/certs/corporate-ca.crt:ro
+      #
+      # Provider configuration: base URLs, keys and force-off switches. Optional
+      # — everything in it can also come from .env.local — but preferred for the
+      # LLM and PDF providers, because a server-configured provider is trusted
+      # with a private address. Start from server-providers.example.yml.
+      # - ./server-providers.yml:/app/server-providers.yml:ro
+      #
       # Classroom media and usage records. The image creates /app/data owned by
       # the runtime user so the first-run copy-up does not land as root.
       - openmaic-data:/app/data
@@ -89,9 +101,10 @@ services:
       - RENDER_MAX_CONCURRENT_EXTRACTIONS=1
       - PRODUCER_PUPPETEER_PROTOCOL_TIMEOUT_MS=900000
       - HF_STATIC_DEDUP=false
-      # The app sits behind nginx here. Until the identity layer lands (phase 3)
-      # every caller collapses to one identity, so a per-identity cap would
-      # throttle the whole deployment to a single render.
+      # The app sits behind nginx here, and render jobs are not yet submitted
+      # under the signed-in subject, so every caller collapses to one identity.
+      # A per-identity cap would then throttle the whole deployment to a single
+      # render.
       - RENDER_MAX_JOBS_PER_USER=0
       - RENDER_PREVIEW_MAX_PER_USER=${RENDER_PREVIEW_MAX_PER_USER:-2}
     mem_limit: ${RENDER_SERVICE_MEMORY_LIMIT:-8g}
